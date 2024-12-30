@@ -6,6 +6,8 @@
 
 - Add Terraform output generator
 
+- Implement native network
+
 - Implement ZFS management operations
 
 - Create VM commands
