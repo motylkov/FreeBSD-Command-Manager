@@ -1,0 +1,26 @@
+# Binaries for programs and plugins
+*.so
+*.a
+*debug_bin
+/bin/
+/lib/
+main
+manager
+fcom
+__debug*
+
+.DS*
+._.DS*
+*.DS*
+*._.DS*
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+config*.yaml
+
+/.vscode
+
