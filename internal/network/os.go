@@ -1,5 +1,10 @@
 package network
 
+import (
+	"fmt"
+	"os/exec"
+)
+
 type BareOSManager struct{}
 
 func NewBareOSManager() *BareOSManager {
@@ -7,7 +12,11 @@ func NewBareOSManager() *BareOSManager {
 }
 
 // iface
-func (m *BareOSManager) CreateInterface(ifType, name string) error {
+func (m *BareOSManager) CreateInterface(name string) error {
+	cmd := exec.Command("ifconfig", name, "create")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Failed to create interface %s: %v, output: %s", name, err, string(out))
+	}
 	return nil
 }
 

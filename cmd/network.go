@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ifType, ifName string
+var ifName string
 var delIfaceName string
 
 var bridgeName string
@@ -34,11 +34,11 @@ var ifaceCmd = &cobra.Command{
 	Short: "Create a generic interface",
 	Run: func(cmd *cobra.Command, args []string) {
 		mgr := network.NewBareOSManager()
-		if err := mgr.CreateInterface(ifType, ifName); err != nil {
+		if err := mgr.CreateInterface(ifName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		fmt.Printf("Interface %s of type %s created\n", ifName, ifType)
+		fmt.Printf("Interface %s created\n", ifName)
 	},
 }
 
@@ -143,7 +143,6 @@ var delGreCmd = &cobra.Command{
 func init() {
 	// iface
 	networkCmd.AddCommand(ifaceCmd)
-	ifaceCmd.Flags().StringVar(&ifType, "type", "", "Interface type (required)")
 	ifaceCmd.Flags().StringVar(&ifName, "name", "", "Interface name (required)")
 	ifaceCmd.MarkFlagRequired("type")
 	ifaceCmd.MarkFlagRequired("name")
