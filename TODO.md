@@ -15,6 +15,10 @@
     - interface
     - bridge
     - other
+- Advanced Network
+    - VALE
+    - VPP
+    - OVS
 
 - Implement ZFS management operations
     - snapshot management (Create/delete)
