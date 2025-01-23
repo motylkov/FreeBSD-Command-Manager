@@ -2,12 +2,15 @@
 
 - Create CLI commands for FreeBSD management
 
-- Implement basic jail configuration
-    - Create CLI commands for jail management (create/start/stop/destroy)
-    - Implement basic jail configuration (name, path, IP)
+## Queue 1: Jail Implementation
+- Create CLI commands for jail management (create/start/stop/destroy/list/info)
+- Implement basic jail configuration (name, path, IP)
+- Add Terraform output generator for jails (done)
+- Develop jail status monitoring
+- Write tests for jail operations
 
-- Add Terraform output generator
 
+## Next
 - Implement native network
     - VXLAN
     - VLAN
