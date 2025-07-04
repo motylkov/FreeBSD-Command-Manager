@@ -1,14 +1,17 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 )
 
-// OutputTerraform prints the given data as pretty JSON to stdout for Terraform integration.
 func Output(data interface{}) error {
-	// format ?
-	fmt.Fprintf(os.Stdout, "%v\n", data)
-
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(data); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to encode terraform output: %v\n", err)
+		return err
+	}
 	return nil
 }
