@@ -185,7 +185,7 @@ func NewRealFileSystemManager() *RealFileSystemManager {
 // EnsurePath ensures the given path exists, creating it if necessary
 func (r *RealFileSystemManager) EnsurePath(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.MkdirAll(path, 0755); err != nil {
+		if err := os.MkdirAll(path, 0o755); err != nil {
 			return fmt.Errorf("failed to create path %s: %v", path, err)
 		}
 	}

@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"FreeBSD-Command-manager/internal"
-	"FreeBSD-Command-manager/internal/jail"
 	"fmt"
 	"os"
+
+	"FreeBSD-Command-manager/internal"
+	"FreeBSD-Command-manager/internal/jail"
 
 	"github.com/spf13/cobra"
 )

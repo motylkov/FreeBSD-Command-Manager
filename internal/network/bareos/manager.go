@@ -17,8 +17,8 @@ type Config struct {
 	Remote string // For GRE tunnels
 }
 
-// Manager defines the interface for network operations
-type Manager interface {
+// ManagerInterface defines the interface for network operations
+type ManagerInterface interface {
 	CreateInterface(name string) error
 	DeleteInterface(name string) error
 	CreateBridge(name string) error
@@ -38,20 +38,20 @@ type CommandExecutor interface {
 	Execute(name string, args ...string) (string, error)
 }
 
-// BareOSManager implements Manager for BareOS network operations
-type BareOSManager struct {
+// Manager implements Manager for BareOS network operations
+type Manager struct {
 	cmdExec CommandExecutor
 }
 
-// NewBareOSManager creates a new BareOS network manager
-func NewBareOSManager(cmdExec CommandExecutor) *BareOSManager {
-	return &BareOSManager{
+// NewManager creates a new BareOS network manager
+func NewManager(cmdExec CommandExecutor) *Manager {
+	return &Manager{
 		cmdExec: cmdExec,
 	}
 }
 
 // List returns information about all network interfaces
-func (n *BareOSManager) List() ([]ifconfig.Info, error) {
+func (n *Manager) List() ([]ifconfig.Info, error) {
 	output, err := n.cmdExec.Execute("ifconfig")
 	if err != nil {
 		return nil, fmt.Errorf("failed to list interfaces: %v", err)
@@ -60,7 +60,7 @@ func (n *BareOSManager) List() ([]ifconfig.Info, error) {
 }
 
 // GetInfo returns information about a specific network interface
-func (n *BareOSManager) GetInfo(name string) (*ifconfig.Info, error) {
+func (n *Manager) GetInfo(name string) (*ifconfig.Info, error) {
 	if name == "" {
 		return nil, fmt.Errorf("interface name is required")
 	}
@@ -73,6 +73,46 @@ func (n *BareOSManager) GetInfo(name string) (*ifconfig.Info, error) {
 		return nil, fmt.Errorf("interface %s not found", name)
 	}
 	return &infos[0], nil
+}
+
+func (n *Manager) CreateInterface(name string) error {
+	return fmt.Errorf("CreateInterface not implemented")
+}
+
+func (n *Manager) DeleteInterface(name string) error {
+	return fmt.Errorf("DeleteInterface not implemented")
+}
+
+func (n *Manager) CreateBridge(name string) error {
+	return fmt.Errorf("CreateBridge not implemented")
+}
+
+func (n *Manager) DeleteBridge(name string) error {
+	return fmt.Errorf("DeleteBridge not implemented")
+}
+
+func (n *Manager) CreateVLAN(name, parent string, vlanID int) error {
+	return fmt.Errorf("CreateVLAN not implemented")
+}
+
+func (n *Manager) DeleteVLAN(name string) error {
+	return fmt.Errorf("DeleteVLAN not implemented")
+}
+
+func (n *Manager) CreateGRE(name, remote, local string) error {
+	return fmt.Errorf("CreateGRE not implemented")
+}
+
+func (n *Manager) DeleteGRE(name string) error {
+	return fmt.Errorf("DeleteGRE not implemented")
+}
+
+func (n *Manager) CreateVXLAN(name, local, remote, group, dev string, vxlanID int) error {
+	return fmt.Errorf("CreateVXLAN not implemented")
+}
+
+func (n *Manager) DeleteVXLAN(name string) error {
+	return fmt.Errorf("DeleteVXLAN not implemented")
 }
 
 // RealCommandExecutor implements CommandExecutor for real system commands
@@ -91,7 +131,7 @@ func (r *RealCommandExecutor) Execute(name string, args ...string) (string, erro
 }
 
 // DefaultManager returns the default network manager instance
-func DefaultManager() Manager {
+func DefaultManager() ManagerInterface {
 	cmdExec := NewRealCommandExecutor()
-	return NewBareOSManager(cmdExec)
+	return NewManager(cmdExec)
 }

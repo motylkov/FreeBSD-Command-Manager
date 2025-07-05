@@ -10,21 +10,23 @@ import (
 )
 
 const (
-	Ethernet string = "ethernet"
-	Wireless string = "wireless"
-	Loopback string = "loopback"
-	Bridge   string = "bridge"
-	VLAN     string = "vlan"
-	VXLAN    string = "vxlan"
-	Tunnel   string = "tunnel"
-	PPP      string = "ppp"
-	LAGG     string = "lagg"
-	GIF      string = "gif"
-	GRE      string = "gre"
-	Tap      string = "tap"
-	Stf      string = "stf"
-	Enc      string = "enc"
-	Unknown  string = "unknown"
+	Ethernet   string = "ethernet"
+	Wireless   string = "wireless"
+	Loopback   string = "loopback"
+	Bridge     string = "bridge"
+	VLAN       string = "vlan"
+	VXLAN      string = "vxlan"
+	Tunnel     string = "tunnel"
+	PPP        string = "ppp"
+	LAGG       string = "lagg"
+	GIF        string = "gif"
+	GRE        string = "gre"
+	Tap        string = "tap"
+	Stf        string = "stf"
+	Enc        string = "enc"
+	Unknown    string = "unknown"
+	StatusUp   string = "up"
+	StatusDown string = "down"
 )
 
 // Info represents information about a network interface
@@ -50,27 +52,14 @@ func ParseIfconfig(output string) []Info {
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 
-		// Check for new interface - only match actual interface names
-		// This regex matches interface names like em0, lo0, vlan1, etc.
-		// but excludes lines like "media:", "status:", "groups:", etc.
-		if matches := regexp.MustCompile(`^([a-z0-9]+):\s+flags=`).FindStringSubmatch(line); matches != nil {
-			// Save previous interface info
+		if isNewInterfaceLine(line) {
 			if currentInfo != nil {
 				currentInfo.Type = determineInterfaceType(flags, media, groups)
 				currentInfo.Status = determineInterfaceStatus(flags)
 				result = append(result, *currentInfo)
 			}
-
-			// Start new interface
-			currentInfo = &Info{Name: matches[1]}
-			flags = ""
-			media = ""
-			groups = ""
-
-			// Extract flags from the same line
-			if strings.Contains(line, "flags=") {
-				flags = line
-			}
+			currentInfo = &Info{Name: extractInterfaceName(line)}
+			flags, media, groups = extractFlagsMediaGroups(line)
 			continue
 		}
 
@@ -78,82 +67,12 @@ func ParseIfconfig(output string) []Info {
 			continue
 		}
 
-		// Collect flags (if not already collected from interface line)
-		if flags == "" && strings.Contains(line, "flags=") {
-			flags = line
-		}
-
-		// Collect media info
-		if strings.Contains(line, "media:") {
-			media = line
-		}
-
-		// Collect groups info
-		if strings.Contains(line, "groups:") {
-			groups = line
-		}
-
-		// Parse MAC address
-		if strings.Contains(line, "ether ") {
-			parts := strings.Fields(line)
-			if len(parts) >= 2 {
-				if mac, err := net.ParseMAC(parts[1]); err == nil {
-					currentInfo.MAC = mac.String()
-				}
-			}
-		}
-
-		// Parse IPv4 addresses
-		if strings.Contains(line, "inet ") && !strings.Contains(line, "inet6") {
-			parts := strings.Fields(line)
-			if len(parts) >= 2 {
-				ip := net.ParseIP(parts[1])
-				if ip != nil && ip.To4() != nil {
-					// Extract netmask if available
-					cidr := parts[1]
-					if len(parts) >= 3 && strings.Contains(parts[2], "netmask") {
-						netmaskStr := parts[3] // netmask is the 4th field after "netmask"
-						if netmaskStr != "" {
-							// Convert hex netmask to CIDR
-							if strings.HasPrefix(netmaskStr, "0x") {
-								if cidrBits := hexNetmaskToCIDR(netmaskStr); cidrBits > 0 {
-									cidr = parts[1] + "/" + fmt.Sprintf("%d", cidrBits)
-								}
-							}
-						}
-					}
-					currentInfo.IPv4 = append(currentInfo.IPv4, cidr)
-				}
-			}
-		}
-
-		// Parse IPv6 addresses
-		if strings.Contains(line, "inet6 ") {
-			parts := strings.Fields(line)
-			if len(parts) >= 2 {
-				// Handle scope identifiers (e.g., fe80::1%lo0)
-				ipStr := parts[1]
-				if idx := strings.Index(ipStr, "%"); idx != -1 {
-					ipStr = ipStr[:idx]
-				}
-
-				ip := net.ParseIP(ipStr)
-				if ip != nil && ip.To16() != nil && ip.To4() == nil {
-					// Extract prefix length if available
-					cidr := ipStr
-					if len(parts) >= 3 && strings.Contains(parts[2], "prefixlen") {
-						prefixLen := parts[3] // prefixlen is the 4th field after "prefixlen"
-						if prefixLen != "" {
-							cidr = ipStr + "/" + prefixLen
-						}
-					}
-					currentInfo.IPv6 = append(currentInfo.IPv6, cidr)
-				}
-			}
-		}
+		flags, media, groups = updateFlagsMediaGroups(line, flags, media, groups)
+		parseMAC(line, currentInfo)
+		parseIPv4(line, currentInfo)
+		parseIPv6(line, currentInfo)
 	}
 
-	// Save last interface info
 	if currentInfo != nil {
 		currentInfo.Type = determineInterfaceType(flags, media, groups)
 		currentInfo.Status = determineInterfaceStatus(flags)
@@ -161,6 +80,93 @@ func ParseIfconfig(output string) []Info {
 	}
 
 	return result
+}
+
+func isNewInterfaceLine(line string) bool {
+	return regexp.MustCompile(`^([a-z0-9]+):\s+flags=`).MatchString(line)
+}
+
+func extractInterfaceName(line string) string {
+	matches := regexp.MustCompile(`^([a-z0-9]+):\s+flags=`).FindStringSubmatch(line)
+	if matches != nil {
+		return matches[1]
+	}
+	return ""
+}
+
+func extractFlagsMediaGroups(line string) (flags, media, groups string) {
+	if strings.Contains(line, "flags=") {
+		flags = line
+	}
+	return
+}
+
+func updateFlagsMediaGroups(line, flags, media, groups string) (string, string, string) {
+	if flags == "" && strings.Contains(line, "flags=") {
+		flags = line
+	}
+	if strings.Contains(line, "media:") {
+		media = line
+	}
+	if strings.Contains(line, "groups:") {
+		groups = line
+	}
+	return flags, media, groups
+}
+
+func parseMAC(line string, currentInfo *Info) {
+	if strings.Contains(line, "ether ") {
+		parts := strings.Fields(line)
+		if len(parts) >= 2 {
+			if mac, err := net.ParseMAC(parts[1]); err == nil {
+				currentInfo.MAC = mac.String()
+			}
+		}
+	}
+}
+
+func parseIPv4(line string, currentInfo *Info) {
+	if strings.Contains(line, "inet ") && !strings.Contains(line, "inet6") {
+		parts := strings.Fields(line)
+		if len(parts) >= 2 {
+			ip := net.ParseIP(parts[1])
+			if ip != nil && ip.To4() != nil {
+				cidr := parts[1]
+				if len(parts) >= 3 && strings.Contains(parts[2], "netmask") {
+					netmaskStr := parts[3]
+					if netmaskStr != "" && strings.HasPrefix(netmaskStr, "0x") {
+						if cidrBits := hexNetmaskToCIDR(netmaskStr); cidrBits > 0 {
+							cidr = parts[1] + "/" + fmt.Sprintf("%d", cidrBits)
+						}
+					}
+				}
+				currentInfo.IPv4 = append(currentInfo.IPv4, cidr)
+			}
+		}
+	}
+}
+
+func parseIPv6(line string, currentInfo *Info) {
+	if strings.Contains(line, "inet6 ") {
+		parts := strings.Fields(line)
+		if len(parts) >= 2 {
+			ipStr := parts[1]
+			if idx := strings.Index(ipStr, "%"); idx != -1 {
+				ipStr = ipStr[:idx]
+			}
+			ip := net.ParseIP(ipStr)
+			if ip != nil && ip.To16() != nil && ip.To4() == nil {
+				cidr := ipStr
+				if len(parts) >= 3 && strings.Contains(parts[2], "prefixlen") {
+					prefixLen := parts[3]
+					if prefixLen != "" {
+						cidr = ipStr + "/" + prefixLen
+					}
+				}
+				currentInfo.IPv6 = append(currentInfo.IPv6, cidr)
+			}
+		}
+	}
 }
 
 func determineInterfaceType(flags, media, groups string) string {
@@ -239,9 +245,9 @@ func determineInterfaceType(flags, media, groups string) string {
 
 func determineInterfaceStatus(flags string) string {
 	if strings.Contains(flags, "RUNNING") {
-		return "up"
+		return StatusUp
 	}
-	return "down"
+	return StatusDown
 }
 
 func hexNetmaskToCIDR(netmaskStr string) int {

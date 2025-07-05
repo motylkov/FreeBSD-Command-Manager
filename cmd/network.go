@@ -1,30 +1,41 @@
 package cmd
 
 import (
-	"FreeBSD-Command-manager/internal"
-	"FreeBSD-Command-manager/internal/network/bareos"
 	"fmt"
 	"os"
+
+	"FreeBSD-Command-manager/internal"
+	"FreeBSD-Command-manager/internal/network/bareos"
 
 	"github.com/spf13/cobra"
 )
 
-var ifName string
-var delIfaceName string
+var (
+	ifName       string
+	delIfaceName string
+)
 
-var bridgeName string
-var delBridgeName string
+var (
+	bridgeName    string
+	delBridgeName string
+)
 
-var vlanName, vlanParent string
-var vlanID int
-var delVlanName string
+var (
+	vlanName, vlanParent string
+	vlanID               int
+	delVlanName          string
+)
 
-var greName, greRemote, greLocal string
-var delGreName string
+var (
+	greName, greRemote, greLocal string
+	delGreName                   string
+)
 
-var vxlanName, vxlanRemote, vxlanLocal, vxlanGroup, vxlanDev string
-var vxlanID int
-var delVxlanName string
+var (
+	vxlanName, vxlanRemote, vxlanLocal, vxlanGroup, vxlanDev string
+	vxlanID                                                  int
+	delVxlanName                                             string
+)
 
 var networkCmd = &cobra.Command{
 	Use:   "network",

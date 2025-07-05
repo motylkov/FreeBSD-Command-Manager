@@ -416,7 +416,6 @@ lo0: flags=1008049<UP,LOOPBACK,RUNNING,MULTICAST,LOWER_UP> metric 0 mtu 16384
 	manager := NewBareOSManager(mockCmd)
 
 	interfaces, err := manager.List()
-
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
