@@ -5,7 +5,7 @@ import (
 )
 
 // CreateBridge creates a bridge interface
-func (n *BareOSManager) CreateBridge(name string) error {
+func (n *Manager) CreateBridge(name string) error {
 	// Create bridge interface
 	bridgeName, err := n.cmdExec.Execute("ifconfig", "bridge", "create")
 	if err != nil {
@@ -30,7 +30,7 @@ func (n *BareOSManager) CreateBridge(name string) error {
 }
 
 // DeleteBridge deletes a bridge interface
-func (n *BareOSManager) DeleteBridge(name string) error {
+func (n *Manager) DeleteBridge(name string) error {
 	if name == "" {
 		return fmt.Errorf("bridge name is required")
 	}

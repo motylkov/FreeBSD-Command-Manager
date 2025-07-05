@@ -5,7 +5,7 @@ import (
 )
 
 // CreateInterface creates a generic network interface
-func (n *BareOSManager) CreateInterface(name string) error {
+func (n *Manager) CreateInterface(name string) error {
 	if name == "" {
 		return fmt.Errorf("interface name is required")
 	}
@@ -25,7 +25,7 @@ func (n *BareOSManager) CreateInterface(name string) error {
 }
 
 // DeleteInterface deletes a network interface
-func (n *BareOSManager) DeleteInterface(name string) error {
+func (n *Manager) DeleteInterface(name string) error {
 	if name == "" {
 		return fmt.Errorf("interface name is required")
 	}

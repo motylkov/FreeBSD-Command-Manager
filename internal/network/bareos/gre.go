@@ -5,7 +5,7 @@ import (
 )
 
 // CreateGRE creates a GRE tunnel interface
-func (n *BareOSManager) CreateGRE(name, remote, local string) error {
+func (n *Manager) CreateGRE(name, remote, local string) error {
 	if remote == "" {
 		return fmt.Errorf("remote address is required")
 	}
@@ -43,7 +43,7 @@ func (n *BareOSManager) CreateGRE(name, remote, local string) error {
 }
 
 // DeleteGRE deletes a GRE tunnel interface
-func (n *BareOSManager) DeleteGRE(name string) error {
+func (n *Manager) DeleteGRE(name string) error {
 	if name == "" {
 		return fmt.Errorf("GRE tunnel name is required")
 	}

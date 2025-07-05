@@ -26,7 +26,7 @@ func TestBareOSManager_CreateInterface(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.CreateInterface(tt.interfaceName)
 
@@ -76,7 +76,7 @@ func TestBareOSManager_DeleteInterface(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.DeleteInterface(tt.interfaceName)
 
@@ -125,7 +125,7 @@ func TestBareOSManager_CreateBridge(t *testing.T) {
 				mockCmd.SetOutput("ifconfig bridge0 up", "")
 			}
 
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.CreateBridge(tt.bridgeName)
 
@@ -213,7 +213,7 @@ func TestBareOSManager_CreateVLAN(t *testing.T) {
 				}
 			}
 
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.CreateVLAN(tt.vlanName, tt.parent, tt.vlanID)
 
@@ -286,7 +286,7 @@ func TestBareOSManager_CreateGRE(t *testing.T) {
 				}
 			}
 
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.CreateGRE(tt.greName, tt.remote, tt.local)
 
@@ -328,7 +328,7 @@ func TestBareOSManager_DeleteVLAN(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.DeleteVLAN(tt.vlanName)
 
@@ -370,7 +370,7 @@ func TestBareOSManager_DeleteGRE(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.DeleteGRE(tt.greName)
 
@@ -413,7 +413,7 @@ lo0: flags=1008049<UP,LOOPBACK,RUNNING,MULTICAST,LOWER_UP> metric 0 mtu 16384
 
 	mockCmd.SetOutput("ifconfig", mockIfconfigOutput)
 
-	manager := NewBareOSManager(mockCmd)
+	manager := NewManager(mockCmd)
 
 	interfaces, err := manager.List()
 	if err != nil {
@@ -466,7 +466,7 @@ nd6 options=23<PERFORMNUD,ACCEPT_RTADV,AUTO_LINKLOCAL>`
 				mockCmd.SetOutput("ifconfig em0", mockIfconfigOutput)
 			}
 
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			info, err := manager.GetInfo(tt.interfaceName)
 
@@ -498,7 +498,7 @@ func TestNewTestManager(t *testing.T) {
 	manager := NewTestManager()
 
 	// Test that it's a BareOSManager with mock implementations
-	_, ok := manager.(*BareOSManager)
+	_, ok := manager.(*Manager)
 	if !ok {
 		t.Error("NewTestManager did not return a BareOSManager")
 	}
@@ -670,7 +670,7 @@ func TestBareOSManager_CreateVXLAN(t *testing.T) {
 				}
 			}
 
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.CreateVXLAN(tt.vxlanName, tt.local, tt.remote, tt.group, tt.dev, tt.vxlanID)
 
@@ -712,7 +712,7 @@ func TestBareOSManager_DeleteVXLAN(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
-			manager := NewBareOSManager(mockCmd)
+			manager := NewManager(mockCmd)
 
 			err := manager.DeleteVXLAN(tt.vxlanName)
 

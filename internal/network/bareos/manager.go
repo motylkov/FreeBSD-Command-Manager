@@ -75,46 +75,6 @@ func (n *Manager) GetInfo(name string) (*ifconfig.Info, error) {
 	return &infos[0], nil
 }
 
-func (n *Manager) CreateInterface(name string) error {
-	return fmt.Errorf("CreateInterface not implemented")
-}
-
-func (n *Manager) DeleteInterface(name string) error {
-	return fmt.Errorf("DeleteInterface not implemented")
-}
-
-func (n *Manager) CreateBridge(name string) error {
-	return fmt.Errorf("CreateBridge not implemented")
-}
-
-func (n *Manager) DeleteBridge(name string) error {
-	return fmt.Errorf("DeleteBridge not implemented")
-}
-
-func (n *Manager) CreateVLAN(name, parent string, vlanID int) error {
-	return fmt.Errorf("CreateVLAN not implemented")
-}
-
-func (n *Manager) DeleteVLAN(name string) error {
-	return fmt.Errorf("DeleteVLAN not implemented")
-}
-
-func (n *Manager) CreateGRE(name, remote, local string) error {
-	return fmt.Errorf("CreateGRE not implemented")
-}
-
-func (n *Manager) DeleteGRE(name string) error {
-	return fmt.Errorf("DeleteGRE not implemented")
-}
-
-func (n *Manager) CreateVXLAN(name, local, remote, group, dev string, vxlanID int) error {
-	return fmt.Errorf("CreateVXLAN not implemented")
-}
-
-func (n *Manager) DeleteVXLAN(name string) error {
-	return fmt.Errorf("DeleteVXLAN not implemented")
-}
-
 // RealCommandExecutor implements CommandExecutor for real system commands
 type RealCommandExecutor struct{}
 

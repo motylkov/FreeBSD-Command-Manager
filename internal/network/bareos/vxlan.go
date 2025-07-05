@@ -7,7 +7,7 @@ import (
 )
 
 // CreateVXLAN creates a VXLAN interface
-func (n *BareOSManager) CreateVXLAN(name, local, remote, group, dev string, vxlanID int) error {
+func (n *Manager) CreateVXLAN(name, local, remote, group, dev string, vxlanID int) error {
 	if local == "" {
 		return fmt.Errorf("local address is required")
 	}
@@ -67,7 +67,7 @@ func (n *BareOSManager) CreateVXLAN(name, local, remote, group, dev string, vxla
 }
 
 // DeleteVXLAN deletes a VXLAN interface
-func (n *BareOSManager) DeleteVXLAN(name string) error {
+func (n *Manager) DeleteVXLAN(name string) error {
 	if name == "" {
 		return fmt.Errorf("VXLAN name is required")
 	}

@@ -5,7 +5,7 @@ import (
 )
 
 // CreateVLAN creates a VLAN interface
-func (n *BareOSManager) CreateVLAN(name, parent string, vlanID int) error {
+func (n *Manager) CreateVLAN(name, parent string, vlanID int) error {
 	if parent == "" {
 		return fmt.Errorf("parent interface is required")
 	}
@@ -43,7 +43,7 @@ func (n *BareOSManager) CreateVLAN(name, parent string, vlanID int) error {
 }
 
 // DeleteVLAN deletes a VLAN interface
-func (n *BareOSManager) DeleteVLAN(name string) error {
+func (n *Manager) DeleteVLAN(name string) error {
 	if name == "" {
 		return fmt.Errorf("VLAN name is required")
 	}

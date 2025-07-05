@@ -58,13 +58,13 @@ func (m *MockCommandExecutor) ClearCommands() {
 	m.commands = []string{}
 }
 
-// NewTestManager creates a new BareOS manager with mock command executor
-func NewTestManager() Manager {
+// NewTestManager creates a new BareOS manager for testing
+func NewTestManager() ManagerInterface {
 	mockCmd := NewMockCommandExecutor()
-	return NewBareOSManager(mockCmd)
+	return NewManager(mockCmd)
 }
 
 // NewTestManagerWithExecutor creates a new BareOS manager with a specific command executor
-func NewTestManagerWithExecutor(cmdExec CommandExecutor) Manager {
-	return NewBareOSManager(cmdExec)
+func NewTestManagerWithExecutor(cmdExec CommandExecutor) ManagerInterface {
+	return NewManager(cmdExec)
 }
