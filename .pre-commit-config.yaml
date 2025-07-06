@@ -24,7 +24,7 @@ repos:
       - id: go-cover
       - id: go-mod-tidy
       - id: golangci-lint
-        args: [--timeout=5m]
+        args: [--timeout=5m, --out-format=colored-line-number]
 
   - repo: https://github.com/psf/black
     rev: 23.12.1
