@@ -8,8 +8,6 @@ run:
 linters-settings:
   gocyclo:
     min-complexity: 15
-  maligned:
-    suggest-new: true
   dupl:
     threshold: 100
   goconst:
@@ -43,7 +41,7 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - copyloopvar  # replaces exportloopref
+    - copyloopvar
     - dogsled
     - dupl
     - errcheck
@@ -53,13 +51,12 @@ linters:
     - gocritic
     - gocyclo
     - goheader
-    - mnd  # replaces gomnd
+    - mnd
     - gomodguard
     - goprintffuncname
     - gosec
     - govet
     - ineffassign
-    # - lll (disabled)
     - makezero
     - misspell
     - nakedret
@@ -70,13 +67,12 @@ linters:
     - promlinter
     - revive
     - rowserrcheck
-    - predeclared
     - staticcheck
     - thelper
     - tparallel
     - unconvert
     - unparam
-    - unused  # replaces deadcode, structcheck, varcheck
+    - unused
     - whitespace
     - wrapcheck
 
@@ -84,7 +80,7 @@ issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - goconst
         - dupl
         - funlen
@@ -94,11 +90,11 @@ issues:
         - tparallel
     - path: cmd/
       linters:
-        - gomnd
+        - mnd
         - goconst
         - dupl
         - funlen
         - gocyclo
         - lll
   max-issues-per-linter: 0
-  max-same-issues: 0 
+  max-same-issues: 0
