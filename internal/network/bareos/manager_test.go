@@ -34,22 +34,23 @@ func TestBareOSManager_CreateInterface(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				commands := mockCmd.GetCommands()
-				if len(commands) < 2 {
-					t.Errorf("expected at least 2 commands, got %d", len(commands))
-				}
-				expectedCreateCmd := "ifconfig " + tt.interfaceName + " create"
-				expectedUpCmd := "ifconfig " + tt.interfaceName + " up"
-				if commands[0] != expectedCreateCmd {
-					t.Errorf("expected first command %s, got %s", expectedCreateCmd, commands[0])
-				}
-				if commands[1] != expectedUpCmd {
-					t.Errorf("expected second command %s, got %s", expectedUpCmd, commands[1])
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			commands := mockCmd.GetCommands()
+			if len(commands) < 2 {
+				t.Errorf("expected at least 2 commands, got %d", len(commands))
+			}
+			expectedCreateCmd := "ifconfig " + tt.interfaceName + " create"
+			expectedUpCmd := "ifconfig " + tt.interfaceName + " up"
+			if commands[0] != expectedCreateCmd {
+				t.Errorf("expected first command %s, got %s", expectedCreateCmd, commands[0])
+			}
+			if commands[1] != expectedUpCmd {
+				t.Errorf("expected second command %s, got %s", expectedUpCmd, commands[1])
 			}
 		})
 	}
@@ -84,14 +85,15 @@ func TestBareOSManager_DeleteInterface(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				expectedCmd := "ifconfig " + tt.interfaceName + " destroy"
-				if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-					t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			expectedCmd := "ifconfig " + tt.interfaceName + " destroy"
+			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
 			}
 		})
 	}
@@ -133,22 +135,23 @@ func TestBareOSManager_CreateBridge(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				commands := mockCmd.GetCommands()
-				if len(commands) < 2 {
-					t.Errorf("expected at least 2 commands, got %d", len(commands))
-				}
-				expectedCreateCmd := "ifconfig bridge create"
-				expectedUpCmd := "ifconfig bridge0 up"
-				if commands[0] != expectedCreateCmd {
-					t.Errorf("expected first command %s, got %s", expectedCreateCmd, commands[0])
-				}
-				if commands[1] != expectedUpCmd {
-					t.Errorf("expected second command %s, got %s", expectedUpCmd, commands[1])
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			commands := mockCmd.GetCommands()
+			if len(commands) < 2 {
+				t.Errorf("expected at least 2 commands, got %d", len(commands))
+			}
+			expectedCreateCmd := "ifconfig bridge create"
+			expectedUpCmd := "ifconfig bridge0 up"
+			if commands[0] != expectedCreateCmd {
+				t.Errorf("expected first command %s, got %s", expectedCreateCmd, commands[0])
+			}
+			if commands[1] != expectedUpCmd {
+				t.Errorf("expected second command %s, got %s", expectedUpCmd, commands[1])
 			}
 		})
 	}
@@ -221,14 +224,15 @@ func TestBareOSManager_CreateVLAN(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				commands := mockCmd.GetCommands()
-				if len(commands) < 2 {
-					t.Errorf("expected at least 2 commands, got %d", len(commands))
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			commands := mockCmd.GetCommands()
+			if len(commands) < 2 {
+				t.Errorf("expected at least 2 commands, got %d", len(commands))
 			}
 		})
 	}
@@ -294,14 +298,15 @@ func TestBareOSManager_CreateGRE(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				commands := mockCmd.GetCommands()
-				if len(commands) < 2 {
-					t.Errorf("expected at least 2 commands, got %d", len(commands))
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			commands := mockCmd.GetCommands()
+			if len(commands) < 2 {
+				t.Errorf("expected at least 2 commands, got %d", len(commands))
 			}
 		})
 	}
@@ -336,14 +341,15 @@ func TestBareOSManager_DeleteVLAN(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				expectedCmd := "ifconfig " + tt.vlanName + " destroy"
-				if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-					t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			expectedCmd := "ifconfig " + tt.vlanName + " destroy"
+			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
 			}
 		})
 	}
@@ -378,14 +384,15 @@ func TestBareOSManager_DeleteGRE(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				expectedCmd := "ifconfig " + tt.greName + " destroy"
-				if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-					t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			expectedCmd := "ifconfig " + tt.greName + " destroy"
+			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
 			}
 		})
 	}
@@ -474,21 +481,22 @@ nd6 options=23<PERFORMNUD,ACCEPT_RTADV,AUTO_LINKLOCAL>`
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				if info == nil {
-					t.Error("expected info but got nil")
-					return
-				}
-				if info.Name != tt.interfaceName {
-					t.Errorf("expected name %s, got %s", tt.interfaceName, info.Name)
-				}
-				expectedCmd := "ifconfig " + tt.interfaceName
-				if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-					t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if info == nil {
+				t.Error("expected info but got nil")
+				return
+			}
+			if info.Name != tt.interfaceName {
+				t.Errorf("expected name %s, got %s", tt.interfaceName, info.Name)
+			}
+			expectedCmd := "ifconfig " + tt.interfaceName
+			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
 			}
 		})
 	}
@@ -678,14 +686,15 @@ func TestBareOSManager_CreateVXLAN(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				commands := mockCmd.GetCommands()
-				if len(commands) < 3 {
-					t.Errorf("expected at least 3 commands, got %d", len(commands))
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			commands := mockCmd.GetCommands()
+			if len(commands) < 3 {
+				t.Errorf("expected at least 3 commands, got %d", len(commands))
 			}
 		})
 	}
@@ -720,14 +729,15 @@ func TestBareOSManager_DeleteVXLAN(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				expectedCmd := "ifconfig " + tt.vxlanName + " destroy"
-				if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-					t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			expectedCmd := "ifconfig " + tt.vxlanName + " destroy"
+			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
 			}
 		})
 	}
