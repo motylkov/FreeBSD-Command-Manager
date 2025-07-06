@@ -2,16 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: [1.22]
+        go-version: ["1.23"]  # Обновлено для совместимости с golangci-lint v2.2.1
 
     steps:
     - uses: actions/checkout@v4
@@ -20,12 +20,16 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.go-version }}
-        cache: true  # Хорошая практика, но не заменяет явное кеширование модулей
+        cache: true
 
-    - name: Install golangci-lint
+    - name: Install pre-built golangci-lint
       run: |
-        go install github.com/golangci/golangci-lint/v2@v2.2.1
+        # Скачиваем готовый билд (рекомендуемый способ)
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.2.1
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+    - name: Verify installation
+      run: golangci-lint --version
 
     - name: Cache Go modules
       uses: actions/cache@v3
@@ -53,4 +57,3 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
-        
