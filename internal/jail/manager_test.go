@@ -65,26 +65,27 @@ func TestFreeBSDJailManager_Create(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
+				return
+			}
 
-				// Verify filesystem manager was called
-				if !mockFS.EnsurePathCalled {
-					t.Error("EnsurePath was not called")
-				}
-				if mockFS.EnsurePathPath != tt.cfg.Path {
-					t.Errorf("expected path %s, got %s", tt.cfg.Path, mockFS.EnsurePathPath)
-				}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
 
-				// Verify command executor was called
-				if !mockCmd.ExecuteCalled {
-					t.Error("Execute was not called")
-				}
-				if mockCmd.ExecuteName != "jail" {
-					t.Errorf("expected command 'jail', got %s", mockCmd.ExecuteName)
-				}
+			// Verify filesystem manager was called
+			if !mockFS.EnsurePathCalled {
+				t.Error("EnsurePath was not called")
+			}
+			if mockFS.EnsurePathPath != tt.cfg.Path {
+				t.Errorf("expected path %s, got %s", tt.cfg.Path, mockFS.EnsurePathPath)
+			}
+
+			// Verify command executor was called
+			if !mockCmd.ExecuteCalled {
+				t.Error("Execute was not called")
+			}
+			if mockCmd.ExecuteName != "jail" {
+				t.Errorf("expected command 'jail', got %s", mockCmd.ExecuteName)
 			}
 		})
 	}
@@ -128,17 +129,18 @@ func TestFreeBSDJailManager_Start(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
+				return
+			}
 
-				if !mockCmd.ExecuteCalled {
-					t.Error("Execute was not called")
-				}
-				if mockCmd.ExecuteName != "jail" {
-					t.Errorf("expected command 'jail', got %s", mockCmd.ExecuteName)
-				}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if !mockCmd.ExecuteCalled {
+				t.Error("Execute was not called")
+			}
+			if mockCmd.ExecuteName != "jail" {
+				t.Errorf("expected command 'jail', got %s", mockCmd.ExecuteName)
 			}
 		})
 	}
@@ -182,17 +184,18 @@ func TestFreeBSDJailManager_Stop(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
+				return
+			}
 
-				if !mockCmd.ExecuteCalled {
-					t.Error("Execute was not called")
-				}
-				if mockCmd.ExecuteName != "jail" {
-					t.Errorf("expected command 'jail', got %s", mockCmd.ExecuteName)
-				}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if !mockCmd.ExecuteCalled {
+				t.Error("Execute was not called")
+			}
+			if mockCmd.ExecuteName != "jail" {
+				t.Errorf("expected command 'jail', got %s", mockCmd.ExecuteName)
 			}
 		})
 	}
@@ -247,10 +250,11 @@ func TestFreeBSDJailManager_Destroy(t *testing.T) {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
 			}
 		})
 	}
