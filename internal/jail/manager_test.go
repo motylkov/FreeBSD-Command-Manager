@@ -234,8 +234,9 @@ func TestFreeBSDJailManager_Destroy(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFS := &MockFileSystemManager{}
 			customCmd := &CustomCommandExecutor{
-				StopError:    tt.stopError,
-				DestroyError: tt.destroyError,
+				StopError:     tt.stopError,
+				DestroyError:  tt.destroyError,
+				IsDestroyMode: true, // Set destroy mode for this test
 			}
 
 			manager := NewFreeBSDJailManager(mockFS, customCmd)

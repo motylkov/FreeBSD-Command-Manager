@@ -5,7 +5,10 @@ import (
 	"strings"
 )
 
-const jailCommand = "jail"
+const (
+	jailCommand          = "jail"
+	jailDestroyedMessage = "jail destroyed"
+)
 
 // MockFileSystemManager implements FileSystemManager for testing
 type MockFileSystemManager struct {
@@ -64,6 +67,7 @@ type CustomCommandExecutor struct {
 	DestroyError     error
 	CallCount        int
 	ExecutedCommands []string // Track what commands were executed
+	IsDestroyMode    bool     // Track if we're in destroy mode
 }
 
 func (c *CustomCommandExecutor) Execute(name string, args ...string) (string, error) {
@@ -82,7 +86,7 @@ func (c *CustomCommandExecutor) Execute(name string, args ...string) (string, er
 		case "stop":
 			return "jail stopped", c.StopError
 		case "destroy":
-			return "jail destroyed", c.DestroyError
+			return jailDestroyedMessage, c.DestroyError
 		case "start":
 			return "jail started", nil
 		case "create":
@@ -91,6 +95,19 @@ func (c *CustomCommandExecutor) Execute(name string, args ...string) (string, er
 			return "jail1\njail2\njail3", nil
 		case "info":
 			return "jail information", nil
+		case "-r":
+			// This is the remove command used by both Stop and Destroy
+			// We need to distinguish based on context
+			if c.IsDestroyMode {
+				// If we're in destroy mode, this is the destroy call
+				return jailDestroyedMessage, c.DestroyError
+			} else {
+				// First -r call is stop, second is destroy
+				if c.CallCount == 1 {
+					return "jail stopped", c.StopError
+				}
+				return jailDestroyedMessage, c.DestroyError
+			}
 		}
 	}
 
