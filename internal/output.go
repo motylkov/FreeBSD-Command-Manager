@@ -11,7 +11,7 @@ func Output(data interface{}) error {
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(data); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to encode terraform output: %v\n", err)
-		return err
+		return fmt.Errorf("failed to encode output: %w", err)
 	}
 	return nil
 }

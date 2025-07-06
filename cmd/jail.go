@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"FreeBSD-Command-manager/internal"
 	"FreeBSD-Command-manager/internal/jail"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +19,7 @@ var jailCmd = &cobra.Command{
 var jailCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new jail",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := jail.DefaultManager()
 
 		cfg := jail.Config{
@@ -50,7 +49,7 @@ var jailCreateCmd = &cobra.Command{
 var jailStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a jail",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := jail.DefaultManager()
 
 		if err := manager.Start(jailName); err != nil {
@@ -71,7 +70,7 @@ var jailStartCmd = &cobra.Command{
 var jailStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop a jail",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := jail.DefaultManager()
 
 		if err := manager.Stop(jailName); err != nil {
@@ -92,7 +91,7 @@ var jailStopCmd = &cobra.Command{
 var jailDestroyCmd = &cobra.Command{
 	Use:   "destroy",
 	Short: "Destroy a jail",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := jail.DefaultManager()
 
 		if err := manager.Destroy(jailName); err != nil {
@@ -113,7 +112,7 @@ var jailDestroyCmd = &cobra.Command{
 var jailListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all jails",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := jail.DefaultManager()
 
 		jails, err := manager.List()
@@ -135,7 +134,7 @@ var jailListCmd = &cobra.Command{
 var jailInfoCmd = &cobra.Command{
 	Use:   "info",
 	Short: "Get information about a jail",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := jail.DefaultManager()
 
 		info, err := manager.GetInfo(jailName)
@@ -153,7 +152,7 @@ var jailInfoCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func init() { //nolint
 	// Create command flags
 	jailCreateCmd.Flags().StringVar(&jailName, "name", "", "Jail name (required)")
 	jailCreateCmd.Flags().StringVar(&jailPath, "path", "", "Jail path (required)")

@@ -5,7 +5,7 @@ run:
 
 linters-settings:
   govet:
-    check-shadowing: true
+    check-shadowing: false  # deprecated, use shadow instead
   gocyclo:
     min-complexity: 15
   maligned:
@@ -21,6 +21,33 @@ linters-settings:
     line-length: 140
   goimports:
     local-prefixes: FreeBSD-Command-manager
+  depguard:
+    rules:
+      main:
+        files:
+          - "main.go"
+        allow:
+          - "FreeBSD-Command-manager/cmd"
+          - "FreeBSD-Command-manager/internal"
+          - "FreeBSD-Command-manager/internal/jail"
+          - "FreeBSD-Command-manager/internal/network/bareos"
+          - "FreeBSD-Command-manager/pkg/ifconfig"
+          - "github.com/spf13/cobra"
+          - "fmt"
+          - "os"
+          - "encoding/json"
+          - "net"
+          - "regexp"
+          - "strconv"
+          - "strings"
+          - "math/bits"
+          - "os/exec"
+          - "errors"
+          - "log"
+  forbidigo:
+    rules:
+      - name: println
+        pattern: ^println$
   gocritic:
     enabled-tags:
       - diagnostic
@@ -39,14 +66,12 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
+    - copyloopvar  # replaces exportloopref
     - depguard
     - dogsled
     - dupl
     - errcheck
-    - exportloopref
     - exhaustive
-    - forbidigo
     - funlen
     - gochecknoinits
     - goconst
@@ -55,8 +80,8 @@ linters:
     - gofmt
     - gofumpt
     - goheader
-    - goimports
-    - gomnd
+ #   - goimports
+    - mnd  # replaces gomnd
     - gomodguard
     - goprintffuncname
     - gosec
@@ -75,15 +100,13 @@ linters:
     - revive
     - rowserrcheck
     - staticcheck
-    - structcheck
     - stylecheck
     - thelper
     - tparallel
     - typecheck
     - unconvert
     - unparam
-    - unused
-    - varcheck
+    - unused  # replaces deadcode, structcheck, varcheck
     - whitespace
     - wrapcheck
 

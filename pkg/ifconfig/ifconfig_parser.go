@@ -25,8 +25,19 @@ const (
 	Stf        string = "stf"
 	Enc        string = "enc"
 	Unknown    string = "unknown"
-	StatusUp   string = "up"
-	StatusDown string = "down"
+	StatusUp          = "up"
+	StatusDown        = "down"
+
+	// Array indices for parsing
+	MinFieldsForIP      = 2
+	IPAddressIndex      = 1
+	NetmaskFieldIndex   = 2
+	NetmaskValueIndex   = 3
+	PrefixLenFieldIndex = 2
+	PrefixLenValueIndex = 3
+
+	// Bit masks for netmask processing
+	ByteMask = 0xFF
 )
 
 // Info represents information about a network interface
@@ -101,7 +112,7 @@ func extractFlagsMediaGroups(line string) (flags, media, groups string) {
 	return
 }
 
-func updateFlagsMediaGroups(line, flags, media, groups string) (string, string, string) {
+func updateFlagsMediaGroups(line, flags, media, groups string) (newFlags, newMedia, newGroups string) {
 	if flags == "" && strings.Contains(line, "flags=") {
 		flags = line
 	}
@@ -117,8 +128,8 @@ func updateFlagsMediaGroups(line, flags, media, groups string) (string, string, 
 func parseMAC(line string, currentInfo *Info) {
 	if strings.Contains(line, "ether ") {
 		parts := strings.Fields(line)
-		if len(parts) >= 2 {
-			if mac, err := net.ParseMAC(parts[1]); err == nil {
+		if len(parts) >= MinFieldsForIP {
+			if mac, err := net.ParseMAC(parts[IPAddressIndex]); err == nil {
 				currentInfo.MAC = mac.String()
 			}
 		}
@@ -128,15 +139,15 @@ func parseMAC(line string, currentInfo *Info) {
 func parseIPv4(line string, currentInfo *Info) {
 	if strings.Contains(line, "inet ") && !strings.Contains(line, "inet6") {
 		parts := strings.Fields(line)
-		if len(parts) >= 2 {
-			ip := net.ParseIP(parts[1])
+		if len(parts) >= MinFieldsForIP {
+			ip := net.ParseIP(parts[IPAddressIndex])
 			if ip != nil && ip.To4() != nil {
-				cidr := parts[1]
-				if len(parts) >= 3 && strings.Contains(parts[2], "netmask") {
-					netmaskStr := parts[3]
+				cidr := parts[IPAddressIndex]
+				if len(parts) >= 3 && strings.Contains(parts[NetmaskFieldIndex], "netmask") {
+					netmaskStr := parts[NetmaskValueIndex]
 					if netmaskStr != "" && strings.HasPrefix(netmaskStr, "0x") {
 						if cidrBits := hexNetmaskToCIDR(netmaskStr); cidrBits > 0 {
-							cidr = parts[1] + "/" + fmt.Sprintf("%d", cidrBits)
+							cidr = parts[IPAddressIndex] + "/" + fmt.Sprintf("%d", cidrBits)
 						}
 					}
 				}
@@ -149,16 +160,16 @@ func parseIPv4(line string, currentInfo *Info) {
 func parseIPv6(line string, currentInfo *Info) {
 	if strings.Contains(line, "inet6 ") {
 		parts := strings.Fields(line)
-		if len(parts) >= 2 {
-			ipStr := parts[1]
+		if len(parts) >= MinFieldsForIP {
+			ipStr := parts[IPAddressIndex]
 			if idx := strings.Index(ipStr, "%"); idx != -1 {
 				ipStr = ipStr[:idx]
 			}
 			ip := net.ParseIP(ipStr)
 			if ip != nil && ip.To16() != nil && ip.To4() == nil {
 				cidr := ipStr
-				if len(parts) >= 3 && strings.Contains(parts[2], "prefixlen") {
-					prefixLen := parts[3]
+				if len(parts) >= 3 && strings.Contains(parts[PrefixLenFieldIndex], "prefixlen") {
+					prefixLen := parts[PrefixLenValueIndex]
 					if prefixLen != "" {
 						cidr = ipStr + "/" + prefixLen
 					}
@@ -170,77 +181,105 @@ func parseIPv6(line string, currentInfo *Info) {
 }
 
 func determineInterfaceType(flags, media, groups string) string {
-	// Check for loopback
-	if strings.Contains(flags, "LOOPBACK") {
+	if isLoopback(flags) {
 		return Loopback
 	}
-
-	// Check for bridge
-	if strings.Contains(media, "bridge members:") {
+	if isBridge(media) {
 		return Bridge
 	}
-
-	// Check for VLAN - look for vlan: in media or groups: vlan in flags
-	if strings.Contains(media, "vlan:") || strings.Contains(groups, "vlan") {
+	if isVLAN(media, groups) {
 		return VLAN
 	}
-
-	// Check for VXLAN
-	if strings.Contains(media, "vxlan:") {
+	if isVXLAN(media) {
 		return VXLAN
 	}
-
-	// Check for LAGG
-	if strings.Contains(media, "laggproto:") {
+	if isLAGG(media) {
 		return LAGG
 	}
-
-	// Check for PPP
-	if strings.Contains(flags, "POINTOPOINT") && strings.Contains(flags, "MULTICAST") {
+	if isPPP(flags) {
 		return PPP
 	}
-
-	// Check for wireless
-	if strings.Contains(media, "IEEE 802.11") {
+	if isWireless(media) {
 		return Wireless
 	}
-
-	// Check for Ethernet
-	if strings.Contains(media, "Ethernet") || strings.Contains(media, "autoselect") {
+	if isEthernet(media) {
 		return Ethernet
 	}
-
-	// Check for tunnel
-	if strings.Contains(flags, "TUNNEL") {
+	if isTunnel(flags) {
 		return Tunnel
 	}
-
-	// Check for GIF
-	if strings.Contains(flags, "SIMPLEX") && strings.Contains(flags, "MULTICAST") {
+	if isGIF(flags) {
 		return GIF
 	}
-
-	// Check for GRE
-	if strings.Contains(media, "gre") {
+	if isGRE(media) {
 		return GRE
 	}
-
-	// Check for TAP
-	if strings.Contains(flags, "TAP") {
+	if isTap(flags) {
 		return Tap
 	}
-
-	// Check for STF
-	if strings.Contains(flags, "stf") {
+	if isStf(flags) {
 		return Stf
 	}
-
-	// Check for ENC
-	if strings.Contains(flags, "ENCAP") {
+	if isEnc(flags) {
 		return Enc
 	}
-
 	return Unknown
+}
+
+func isLoopback(flags string) bool {
+	return strings.Contains(flags, "LOOPBACK")
+}
+
+func isBridge(media string) bool {
+	return strings.Contains(media, "bridge members:")
+}
+
+func isVLAN(media, groups string) bool {
+	return strings.Contains(media, "vlan:") || strings.Contains(groups, "vlan")
+}
+
+func isVXLAN(media string) bool {
+	return strings.Contains(media, "vxlan:")
+}
+
+func isLAGG(media string) bool {
+	return strings.Contains(media, "laggproto:")
+}
+
+func isPPP(flags string) bool {
+	return strings.Contains(flags, "POINTOPOINT") && strings.Contains(flags, "MULTICAST")
+}
+
+func isWireless(media string) bool {
+	return strings.Contains(media, "IEEE 802.11")
+}
+
+func isEthernet(media string) bool {
+	return strings.Contains(media, "Ethernet") || strings.Contains(media, "autoselect")
+}
+
+func isTunnel(flags string) bool {
+	return strings.Contains(flags, "TUNNEL")
+}
+
+func isGIF(flags string) bool {
+	return strings.Contains(flags, "SIMPLEX") && strings.Contains(flags, "MULTICAST")
+}
+
+func isGRE(media string) bool {
+	return strings.Contains(media, "gre")
+}
+
+func isTap(flags string) bool {
+	return strings.Contains(flags, "TAP")
+}
+
+func isStf(flags string) bool {
+	return strings.Contains(flags, "stf")
+}
+
+func isEnc(flags string) bool {
+	return strings.Contains(flags, "ENCAP")
 }
 
 func determineInterfaceStatus(flags string) string {
@@ -258,7 +297,7 @@ func hexNetmaskToCIDR(netmaskStr string) int {
 
 	cidrBits := 0
 	for netmask > 0 {
-		cidrBits += bits.OnesCount64(netmask & 0xFF)
+		cidrBits += bits.OnesCount64(netmask & ByteMask)
 		netmask >>= 8
 	}
 

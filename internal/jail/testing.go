@@ -1,5 +1,12 @@
 package jail
 
+import (
+	"fmt"
+	"strings"
+)
+
+const jailCommand = "jail"
+
 // MockFileSystemManager implements FileSystemManager for testing
 type MockFileSystemManager struct {
 	EnsurePathCalled bool
@@ -53,19 +60,42 @@ func (m *MockCommandExecutor) Execute(name string, args ...string) (string, erro
 
 // CustomCommandExecutor implements CommandExecutor for testing destroy scenarios
 type CustomCommandExecutor struct {
-	StopError    error
-	DestroyError error
-	CallCount    int
+	StopError        error
+	DestroyError     error
+	CallCount        int
+	ExecutedCommands []string // Track what commands were executed
 }
 
 func (c *CustomCommandExecutor) Execute(name string, args ...string) (string, error) {
 	c.CallCount++
 
-	// First call is stop, second call is destroy
-	if c.CallCount == 1 {
-		return "", c.StopError
+	// Build the full command string for tracking
+	command := name
+	if len(args) > 0 {
+		command += " " + strings.Join(args, " ")
 	}
-	return "", c.DestroyError
+	c.ExecutedCommands = append(c.ExecutedCommands, command)
+
+	// Simulate different jail commands based on the actual command being executed
+	if name == jailCommand && len(args) > 0 {
+		switch args[0] {
+		case "stop":
+			return "jail stopped", c.StopError
+		case "destroy":
+			return "jail destroyed", c.DestroyError
+		case "start":
+			return "jail started", nil
+		case "create":
+			return "jail created", nil
+		case "list":
+			return "jail1\njail2\njail3", nil
+		case "info":
+			return "jail information", nil
+		}
+	}
+
+	// Default response for unknown commands
+	return fmt.Sprintf("executed: %s", command), nil
 }
 
 // NewMockManager creates a new jail manager with mock implementations for testing

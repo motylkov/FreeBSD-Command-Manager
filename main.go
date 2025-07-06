@@ -7,8 +7,8 @@ import (
 var VERSION = "0.01" //nolint: gochecknoglobals
 
 var (
-	commit string = "0" //nolint: gochecknoglobals
-	built  string = "0" //nolint: gochecknoglobals
+	commit = "0" //nolint: gochecknoglobals,unused
+	built  = "0" //nolint: gochecknoglobals,unused
 )
 
 func main() {

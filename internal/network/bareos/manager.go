@@ -1,10 +1,9 @@
 package bareos
 
 import (
+	"FreeBSD-Command-manager/pkg/ifconfig"
 	"fmt"
 	"os/exec"
-
-	"FreeBSD-Command-manager/pkg/ifconfig"
 )
 
 // Config represents network interface configuration

@@ -7,6 +7,11 @@ import (
 	"os/exec"
 )
 
+const (
+	// DefaultDirectoryPermissions is the default permission mode for creating directories
+	DefaultDirectoryPermissions = 0o755
+)
+
 // Config represents the configuration for a jail
 type Config struct {
 	Name  string
@@ -185,7 +190,7 @@ func NewRealFileSystemManager() *RealFileSystemManager {
 // EnsurePath ensures the given path exists, creating it if necessary
 func (r *RealFileSystemManager) EnsurePath(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.MkdirAll(path, 0o755); err != nil {
+		if err := os.MkdirAll(path, DefaultDirectoryPermissions); err != nil {
 			return fmt.Errorf("failed to create path %s: %v", path, err)
 		}
 	}

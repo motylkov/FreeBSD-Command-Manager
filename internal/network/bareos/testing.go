@@ -39,7 +39,7 @@ func (m *MockCommandExecutor) Execute(name string, args ...string) (string, erro
 }
 
 // SetOutput sets the output for a specific command
-func (m *MockCommandExecutor) SetOutput(command string, output string) {
+func (m *MockCommandExecutor) SetOutput(command, output string) {
 	m.outputs[command] = output
 }
 
