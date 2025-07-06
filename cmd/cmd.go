@@ -1,3 +1,4 @@
+// Package cmd provides the CLI commands for the FreeBSD Command Manager.
 package cmd
 
 import (
@@ -13,6 +14,7 @@ var cmd = &cobra.Command{
 	Long:  `A CLI tool for managing FreeBSD`,
 }
 
+// Execute runs the root command for the FreeBSD Command Manager CLI.
 func Execute() {
 	if err := cmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

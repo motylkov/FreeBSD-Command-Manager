@@ -26,12 +26,14 @@ type MockFileSystemManager struct {
 	UnmountError  error
 }
 
+// EnsurePath ensures the given path exists (mock implementation).
 func (m *MockFileSystemManager) EnsurePath(path string) error {
 	m.EnsurePathCalled = true
 	m.EnsurePathPath = path
 	return m.EnsurePathError
 }
 
+// Mount mounts a source to a target (mock implementation).
 func (m *MockFileSystemManager) Mount(source, target string) error {
 	m.MountCalled = true
 	m.MountSource = source
@@ -39,6 +41,7 @@ func (m *MockFileSystemManager) Mount(source, target string) error {
 	return m.MountError
 }
 
+// Unmount unmounts a target (mock implementation).
 func (m *MockFileSystemManager) Unmount(target string) error {
 	m.UnmountCalled = true
 	m.UnmountTarget = target
@@ -54,6 +57,7 @@ type MockCommandExecutor struct {
 	ExecuteError  error
 }
 
+// Execute executes a command (mock implementation).
 func (m *MockCommandExecutor) Execute(name string, args ...string) (string, error) {
 	m.ExecuteCalled = true
 	m.ExecuteName = name
@@ -70,6 +74,7 @@ type CustomCommandExecutor struct {
 	IsDestroyMode    bool     // Track if we're in destroy mode
 }
 
+// Execute executes a command (mock implementation for destroy scenarios).
 func (c *CustomCommandExecutor) Execute(name string, args ...string) (string, error) {
 	c.CallCount++
 
@@ -96,18 +101,14 @@ func (c *CustomCommandExecutor) Execute(name string, args ...string) (string, er
 		case "info":
 			return "jail information", nil
 		case "-r":
-			// This is the remove command used by both Stop and Destroy
-			// We need to distinguish based on context
 			if c.IsDestroyMode {
-				// If we're in destroy mode, this is the destroy call
-				return jailDestroyedMessage, c.DestroyError
-			} else {
-				// First -r call is stop, second is destroy
-				if c.CallCount == 1 {
-					return "jail stopped", c.StopError
-				}
 				return jailDestroyedMessage, c.DestroyError
 			}
+			// First -r call is stop, second is destroy
+			if c.CallCount == 1 {
+				return "jail stopped", c.StopError
+			}
+			return jailDestroyedMessage, c.DestroyError
 		}
 	}
 

@@ -1,3 +1,4 @@
+// Package jail provides management for FreeBSD jails.
 package jail
 
 import (
@@ -159,7 +160,7 @@ func (j *FreeBSDJailManager) List() ([]Info, error) {
 	return jails, nil
 }
 
-// Get information about a specific jail
+// GetInfo returns information about a specific jail.
 func (j *FreeBSDJailManager) GetInfo(name string) (*Info, error) {
 	if name == "" {
 		return nil, errors.New("jail name is required")

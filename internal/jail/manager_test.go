@@ -91,7 +91,8 @@ func TestFreeBSDJailManager_Create(t *testing.T) {
 	}
 }
 
-func TestFreeBSDJailManager_Start(t *testing.T) {
+func runJailManagerSimpleTest(t *testing.T, testName string, testFunc func(manager *FreeBSDJailManager, jailName string) error) {
+	t.Helper()
 	tests := []struct {
 		name        string
 		jailName    string
@@ -99,7 +100,7 @@ func TestFreeBSDJailManager_Start(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name:        "successful start",
+			name:        "successful " + testName,
 			jailName:    "test-jail",
 			expectError: false,
 		},
@@ -120,10 +121,9 @@ func TestFreeBSDJailManager_Start(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFS := &MockFileSystemManager{}
 			mockCmd := &MockCommandExecutor{ExecuteError: tt.cmdError}
-
 			manager := NewFreeBSDJailManager(mockFS, mockCmd)
 
-			err := manager.Start(tt.jailName)
+			err := testFunc(manager, tt.jailName)
 
 			if tt.expectError {
 				if err == nil {
@@ -146,59 +146,16 @@ func TestFreeBSDJailManager_Start(t *testing.T) {
 	}
 }
 
+func TestFreeBSDJailManager_Start(t *testing.T) {
+	runJailManagerSimpleTest(t, "start", func(manager *FreeBSDJailManager, jailName string) error {
+		return manager.Start(jailName)
+	})
+}
+
 func TestFreeBSDJailManager_Stop(t *testing.T) {
-	tests := []struct {
-		name        string
-		jailName    string
-		cmdError    error
-		expectError bool
-	}{
-		{
-			name:        "successful stop",
-			jailName:    "test-jail",
-			expectError: false,
-		},
-		{
-			name:        "empty name",
-			jailName:    "",
-			expectError: true,
-		},
-		{
-			name:        "command error",
-			jailName:    "test-jail",
-			cmdError:    errors.New("command error"),
-			expectError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockFS := &MockFileSystemManager{}
-			mockCmd := &MockCommandExecutor{ExecuteError: tt.cmdError}
-
-			manager := NewFreeBSDJailManager(mockFS, mockCmd)
-
-			err := manager.Stop(tt.jailName)
-
-			if tt.expectError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-
-			if !mockCmd.ExecuteCalled {
-				t.Error("Execute was not called")
-			}
-			if mockCmd.ExecuteName != "jail" {
-				t.Errorf("expected command 'jail', got %s", mockCmd.ExecuteName)
-			}
-		})
-	}
+	runJailManagerSimpleTest(t, "stop", func(manager *FreeBSDJailManager, jailName string) error {
+		return manager.Stop(jailName)
+	})
 }
 
 func TestFreeBSDJailManager_Destroy(t *testing.T) {

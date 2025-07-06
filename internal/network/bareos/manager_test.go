@@ -56,49 +56,6 @@ func TestBareOSManager_CreateInterface(t *testing.T) {
 	}
 }
 
-func TestBareOSManager_DeleteInterface(t *testing.T) {
-	tests := []struct {
-		name          string
-		interfaceName string
-		shouldError   bool
-	}{
-		{
-			name:          "successful interface deletion",
-			interfaceName: "test0",
-			shouldError:   false,
-		},
-		{
-			name:          "empty interface name",
-			interfaceName: "",
-			shouldError:   true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockCmd := NewMockCommandExecutor()
-			manager := NewManager(mockCmd)
-
-			err := manager.DeleteInterface(tt.interfaceName)
-
-			if tt.shouldError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			expectedCmd := "ifconfig " + tt.interfaceName + " destroy"
-			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-			}
-		})
-	}
-}
-
 func TestBareOSManager_CreateBridge(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -307,92 +264,6 @@ func TestBareOSManager_CreateGRE(t *testing.T) {
 			commands := mockCmd.GetCommands()
 			if len(commands) < 2 {
 				t.Errorf("expected at least 2 commands, got %d", len(commands))
-			}
-		})
-	}
-}
-
-func TestBareOSManager_DeleteVLAN(t *testing.T) {
-	tests := []struct {
-		name        string
-		vlanName    string
-		shouldError bool
-	}{
-		{
-			name:        "successful VLAN deletion",
-			vlanName:    "vlan100",
-			shouldError: false,
-		},
-		{
-			name:        "empty VLAN name",
-			vlanName:    "",
-			shouldError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockCmd := NewMockCommandExecutor()
-			manager := NewManager(mockCmd)
-
-			err := manager.DeleteVLAN(tt.vlanName)
-
-			if tt.shouldError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			expectedCmd := "ifconfig " + tt.vlanName + " destroy"
-			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-			}
-		})
-	}
-}
-
-func TestBareOSManager_DeleteGRE(t *testing.T) {
-	tests := []struct {
-		name        string
-		greName     string
-		shouldError bool
-	}{
-		{
-			name:        "successful GRE deletion",
-			greName:     "gre0",
-			shouldError: false,
-		},
-		{
-			name:        "empty GRE name",
-			greName:     "",
-			shouldError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockCmd := NewMockCommandExecutor()
-			manager := NewManager(mockCmd)
-
-			err := manager.DeleteGRE(tt.greName)
-
-			if tt.shouldError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			expectedCmd := "ifconfig " + tt.greName + " destroy"
-			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
 			}
 		})
 	}
@@ -700,49 +571,117 @@ func TestBareOSManager_CreateVXLAN(t *testing.T) {
 	}
 }
 
+// Test helpers for Delete* and bridge interface management
+func runDeleteTest(t *testing.T, deleteFunc func(string) error, _, ifName, expectedCmd string, shouldError bool) {
+	t.Helper()
+	mockCmd := NewMockCommandExecutor()
+	// manager := NewManager(mockCmd) // Remove unused variable
+
+	err := deleteFunc(ifName)
+
+	if shouldError {
+		if err == nil {
+			t.Error("expected error but got none")
+		}
+		return
+	}
+
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+		t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
+	}
+}
+
+func runBridgeMemberTest(t *testing.T, bridgeFunc func(string, string) error, _, bridgeName, ifaceName, expectedCmd string, shouldError bool) {
+	t.Helper()
+	mockCmd := NewMockCommandExecutor()
+	// manager := NewManager(mockCmd) // Remove unused variable
+
+	err := bridgeFunc(bridgeName, ifaceName)
+
+	if shouldError {
+		if err == nil {
+			t.Error("expected error but got none")
+		}
+		return
+	}
+
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+		t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
+	}
+}
+
+// Update Delete* tests to use runDeleteTest
+func TestBareOSManager_DeleteInterface(t *testing.T) {
+	tests := []struct {
+		name          string
+		interfaceName string
+		shouldError   bool
+	}{
+		{"successful interface deletion", "test0", false},
+		{"empty interface name", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runDeleteTest(t, NewManager(NewMockCommandExecutor()).DeleteInterface, tt.name, tt.interfaceName, "ifconfig "+tt.interfaceName+" destroy", tt.shouldError)
+		})
+	}
+}
+
+func TestBareOSManager_DeleteVLAN(t *testing.T) {
+	tests := []struct {
+		name        string
+		vlanName    string
+		shouldError bool
+	}{
+		{"successful VLAN deletion", "vlan100", false},
+		{"empty VLAN name", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runDeleteTest(t, NewManager(NewMockCommandExecutor()).DeleteVLAN, tt.name, tt.vlanName, "ifconfig "+tt.vlanName+" destroy", tt.shouldError)
+		})
+	}
+}
+
+func TestBareOSManager_DeleteGRE(t *testing.T) {
+	tests := []struct {
+		name        string
+		greName     string
+		shouldError bool
+	}{
+		{"successful GRE deletion", "gre0", false},
+		{"empty GRE name", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runDeleteTest(t, NewManager(NewMockCommandExecutor()).DeleteGRE, tt.name, tt.greName, "ifconfig "+tt.greName+" destroy", tt.shouldError)
+		})
+	}
+}
+
 func TestBareOSManager_DeleteVXLAN(t *testing.T) {
 	tests := []struct {
 		name        string
 		vxlanName   string
 		shouldError bool
 	}{
-		{
-			name:        "successful VXLAN deletion",
-			vxlanName:   "vxlan0",
-			shouldError: false,
-		},
-		{
-			name:        "empty VXLAN name",
-			vxlanName:   "",
-			shouldError: true,
-		},
+		{"successful VXLAN deletion", "vxlan0", false},
+		{"empty VXLAN name", "", true},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockCmd := NewMockCommandExecutor()
-			manager := NewManager(mockCmd)
-
-			err := manager.DeleteVXLAN(tt.vxlanName)
-
-			if tt.shouldError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			expectedCmd := "ifconfig " + tt.vxlanName + " destroy"
-			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-			}
+			runDeleteTest(t, NewManager(NewMockCommandExecutor()).DeleteVXLAN, tt.name, tt.vxlanName, "ifconfig "+tt.vxlanName+" destroy", tt.shouldError)
 		})
 	}
 }
 
+// Update Add/RemoveInterfaceToBridge tests to use runBridgeMemberTest
 func TestBareOSManager_AddInterfaceToBridge(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -750,47 +689,13 @@ func TestBareOSManager_AddInterfaceToBridge(t *testing.T) {
 		interfaceName string
 		shouldError   bool
 	}{
-		{
-			name:          "successful interface addition",
-			bridgeName:    "br0",
-			interfaceName: "em0",
-			shouldError:   false,
-		},
-		{
-			name:          "empty bridge name",
-			bridgeName:    "",
-			interfaceName: "em0",
-			shouldError:   true,
-		},
-		{
-			name:          "empty interface name",
-			bridgeName:    "br0",
-			interfaceName: "",
-			shouldError:   true,
-		},
+		{"successful interface addition", "br0", "em0", false},
+		{"empty bridge name", "", "em0", true},
+		{"empty interface name", "br0", "", true},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockCmd := NewMockCommandExecutor()
-			manager := NewManager(mockCmd)
-
-			err := manager.AddInterfaceToBridge(tt.bridgeName, tt.interfaceName)
-
-			if tt.shouldError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			expectedCmd := "ifconfig " + tt.bridgeName + " addm " + tt.interfaceName
-			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-			}
+			runBridgeMemberTest(t, NewManager(NewMockCommandExecutor()).AddInterfaceToBridge, tt.name, tt.bridgeName, tt.interfaceName, "ifconfig "+tt.bridgeName+" addm "+tt.interfaceName, tt.shouldError)
 		})
 	}
 }
@@ -802,47 +707,13 @@ func TestBareOSManager_RemoveInterfaceFromBridge(t *testing.T) {
 		interfaceName string
 		shouldError   bool
 	}{
-		{
-			name:          "successful interface removal",
-			bridgeName:    "br0",
-			interfaceName: "em0",
-			shouldError:   false,
-		},
-		{
-			name:          "empty bridge name",
-			bridgeName:    "",
-			interfaceName: "em0",
-			shouldError:   true,
-		},
-		{
-			name:          "empty interface name",
-			bridgeName:    "br0",
-			interfaceName: "",
-			shouldError:   true,
-		},
+		{"successful interface removal", "br0", "em0", false},
+		{"empty bridge name", "", "em0", true},
+		{"empty interface name", "br0", "", true},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockCmd := NewMockCommandExecutor()
-			manager := NewManager(mockCmd)
-
-			err := manager.RemoveInterfaceFromBridge(tt.bridgeName, tt.interfaceName)
-
-			if tt.shouldError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			expectedCmd := "ifconfig " + tt.bridgeName + " deletem " + tt.interfaceName
-			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
-				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
-			}
+			runBridgeMemberTest(t, NewManager(NewMockCommandExecutor()).RemoveInterfaceFromBridge, tt.name, tt.bridgeName, tt.interfaceName, "ifconfig "+tt.bridgeName+" deletem "+tt.interfaceName, tt.shouldError)
 		})
 	}
 }

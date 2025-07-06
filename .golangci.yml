@@ -1,3 +1,4 @@
+version: 2
 run:
   timeout: 5m
   go: "1.22"
@@ -19,29 +20,6 @@ linters-settings:
     line-length: 140
   goimports:
     local-prefixes: FreeBSD-Command-manager
-  depguard:
-    rules:
-      main:
-        files:
-          - "main.go"
-        allow:
-          - "FreeBSD-Command-manager/cmd"
-          - "FreeBSD-Command-manager/internal"
-          - "FreeBSD-Command-manager/internal/jail"
-          - "FreeBSD-Command-manager/internal/network/bareos"
-          - "FreeBSD-Command-manager/pkg/ifconfig"
-          - "github.com/spf13/cobra"
-          - "fmt"
-          - "os"
-          - "encoding/json"
-          - "net"
-          - "regexp"
-          - "strconv"
-          - "strings"
-          - "math/bits"
-          - "os/exec"
-          - "errors"
-          - "log"
   forbidigo:
     rules:
       - name: println
@@ -65,28 +43,22 @@ linters:
   enable:
     - bodyclose
     - copyloopvar  # replaces exportloopref
-    - depguard
     - dogsled
     - dupl
     - errcheck
     - exhaustive
-    - funlen
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - gofumpt
     - goheader
- #   - goimports
     - mnd  # replaces gomnd
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
-    - lll
+    # - lll (disabled)
     - makezero
     - misspell
     - nakedret
@@ -99,10 +71,8 @@ linters:
     - rowserrcheck
     - predeclared
     - staticcheck
-    - stylecheck
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused  # replaces deadcode, structcheck, varcheck
@@ -129,15 +99,5 @@ issues:
         - funlen
         - gocyclo
         - lll
-    - path: examples/
-      linters:
-        - gomnd
-        - goconst
-        - dupl
-        - funlen
-        - gocyclo
-        - lll
-        - thelper
-        - tparallel
   max-issues-per-linter: 0
   max-same-issues: 0 

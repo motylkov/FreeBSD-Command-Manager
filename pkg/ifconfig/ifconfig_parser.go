@@ -1,3 +1,4 @@
+// Package ifconfig provides parsing utilities for FreeBSD ifconfig output.
 package ifconfig
 
 import (
@@ -9,6 +10,7 @@ import (
 	"strings"
 )
 
+// Interface type strings.
 const (
 	Ethernet   string = "ethernet"
 	Wireless   string = "wireless"
@@ -50,7 +52,7 @@ type Info struct {
 	MAC    string
 }
 
-// Parses FreeBSD ifconfig output into a slice of Info structs.
+// ParseIfconfig parses FreeBSD ifconfig output into a slice of Info structs.
 func ParseIfconfig(output string) []Info {
 	var result []Info
 	lines := strings.Split(output, "\n")

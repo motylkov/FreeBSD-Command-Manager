@@ -1,3 +1,4 @@
+// Package internal provides internal utilities for the FreeBSD Command Manager.
 package internal
 
 import (
@@ -6,6 +7,7 @@ import (
 	"os"
 )
 
+// Output prints the given data as JSON to stdout.
 func Output(data interface{}) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")

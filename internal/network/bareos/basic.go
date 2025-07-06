@@ -1,3 +1,4 @@
+// Package bareos provides basic network interface management for FreeBSD.
 package bareos
 
 import (

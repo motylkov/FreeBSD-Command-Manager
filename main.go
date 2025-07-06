@@ -1,9 +1,11 @@
+// Command-manager is the entry point for the FreeBSD Command Manager CLI.
 package main
 
 import (
 	"FreeBSD-Command-manager/cmd"
 )
 
+// VERSION is the current version of the FreeBSD Command Manager.
 var VERSION = "0.01" //nolint: gochecknoglobals
 
 var (
