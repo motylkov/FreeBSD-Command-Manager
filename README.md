@@ -2,6 +2,7 @@
 
 A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 
+[![CI](https://github.com/motylkov/FreeBSD-Command-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/motylkov/FreeBSD-Command-Manager/actions/workflows/ci.yml)
 
 ## Features
 

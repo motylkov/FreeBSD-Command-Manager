@@ -8,7 +8,8 @@ on:
 
 jobs:
   test:
-    runs-on: freebsd-latest
+    #runs-on: freebsd-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         go-version: [1.21, 1.22]
@@ -57,7 +58,8 @@ jobs:
         fail_ci_if_error: false
 
   build:
-    runs-on: freebsd-latest
+    #runs-on: freebsd-latest
+    runs-on: ubuntu-latest
     needs: test
     strategy:
       matrix:
