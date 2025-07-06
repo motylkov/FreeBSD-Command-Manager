@@ -24,7 +24,7 @@ jobs:
     - name: Install golangci-lint
       uses: golangci/golangci-lint-action@v4
       with:
-        version: v2.x
+        version: v2
 
     - name: Cache Go modules
       uses: actions/cache@v3
@@ -42,7 +42,7 @@ jobs:
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v4
       with:
-        version: v2.x
+        version: v2
         args: --timeout=5m --out-format=colored-line-number
 
     - name: Run tests
