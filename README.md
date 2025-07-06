@@ -2,7 +2,7 @@
 
 A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 
-[![CI](https://github.com/motylkov/FreeBSD-Command-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/motylkov/FreeBSD-Command-Manager/actions/workflows/ci.yml)
+[![CI](https://github.com/motylkov/FreeBSD-Command-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/motylkov/FreeBSD-Command-Manager/actions/workflows/ci.yml) 
 
 ## Features
 
@@ -203,11 +203,35 @@ A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 ./freebsd-cmd-manager network list
 ```
 
-## Installation
 
-## Configuration
 
-## Development
 
-### Prerequisites
+## Contributing
 
+Contributions are welcome! To contribute:
+
+1. **Fork** the repository and create your branch from `main`.
+2. **Write clear, well-tested code** and ensure it passes all linters and tests:
+   ```sh
+   golangci-lint run
+   go test ./...
+   ```
+3. **Document** any new features or changes in the README if needed.
+4. **Open a Pull Request** with a clear description of your changes and why they are needed.
+
+### Development Environment
+
+- Use Go 1.22 or newer (see `.golangci.yml` and CI workflow for the current version).
+- Use `golangci-lint` v2.x for linting.
+- Run `go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...` before submitting.
+
+### Code Style
+
+- Follow Go best practices and idioms.
+- Keep functions short and focused.
+- Add comments for exported functions and types.
+- Use descriptive commit messages.
+
+If you have any questions, feel free to open an issue or discussion!
+
+![FreeBSD](https://img.shields.io/badge/-FreeBSD-%23870000?style=for-the-badge&logo=freebsd&logoColor=white) ![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)

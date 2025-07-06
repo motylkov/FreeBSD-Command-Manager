@@ -15,14 +15,14 @@
 ## Queue 2: Basic OS Networking
 
 - Implement native network
-    - VXLAN
+    - VXLAN (done)
     - VLAN (done)
     - GRE (done)
     - interface (done)
     - bridge (done)
     - other
 
-- Add linter
+- Add linter (done)
 
 
 ## Queue 3: ZFS Management 
