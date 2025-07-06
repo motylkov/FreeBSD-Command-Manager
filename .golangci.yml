@@ -4,8 +4,6 @@ run:
   modules-download-mode: readonly
 
 linters-settings:
-  govet:
-    check-shadowing: false  # deprecated, use shadow instead
   gocyclo:
     min-complexity: 15
   maligned:
