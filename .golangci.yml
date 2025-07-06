@@ -97,7 +97,7 @@ linters:
     - promlinter
     - revive
     - rowserrcheck
-    - shadow
+    - predeclared
     - staticcheck
     - stylecheck
     - thelper

@@ -37,3 +37,39 @@ func (n *Manager) DeleteBridge(name string) error {
 
 	return n.DeleteInterface(name)
 }
+
+// AddInterfaceToBridge adds an interface to a bridge
+func (n *Manager) AddInterfaceToBridge(bridgeName, interfaceName string) error {
+	if bridgeName == "" {
+		return fmt.Errorf("bridge name is required")
+	}
+	if interfaceName == "" {
+		return fmt.Errorf("interface name is required")
+	}
+
+	// Add interface to bridge using ifconfig
+	_, err := n.cmdExec.Execute("ifconfig", bridgeName, "addm", interfaceName)
+	if err != nil {
+		return fmt.Errorf("failed to add interface %s to bridge %s: %v", interfaceName, bridgeName, err)
+	}
+
+	return nil
+}
+
+// RemoveInterfaceFromBridge removes an interface from a bridge
+func (n *Manager) RemoveInterfaceFromBridge(bridgeName, interfaceName string) error {
+	if bridgeName == "" {
+		return fmt.Errorf("bridge name is required")
+	}
+	if interfaceName == "" {
+		return fmt.Errorf("interface name is required")
+	}
+
+	// Remove interface from bridge using ifconfig
+	_, err := n.cmdExec.Execute("ifconfig", bridgeName, "deletem", interfaceName)
+	if err != nil {
+		return fmt.Errorf("failed to remove interface %s from bridge %s: %v", interfaceName, bridgeName, err)
+	}
+
+	return nil
+}

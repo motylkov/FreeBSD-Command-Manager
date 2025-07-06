@@ -742,3 +742,107 @@ func TestBareOSManager_DeleteVXLAN(t *testing.T) {
 		})
 	}
 }
+
+func TestBareOSManager_AddInterfaceToBridge(t *testing.T) {
+	tests := []struct {
+		name          string
+		bridgeName    string
+		interfaceName string
+		shouldError   bool
+	}{
+		{
+			name:          "successful interface addition",
+			bridgeName:    "br0",
+			interfaceName: "em0",
+			shouldError:   false,
+		},
+		{
+			name:          "empty bridge name",
+			bridgeName:    "",
+			interfaceName: "em0",
+			shouldError:   true,
+		},
+		{
+			name:          "empty interface name",
+			bridgeName:    "br0",
+			interfaceName: "",
+			shouldError:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCmd := NewMockCommandExecutor()
+			manager := NewManager(mockCmd)
+
+			err := manager.AddInterfaceToBridge(tt.bridgeName, tt.interfaceName)
+
+			if tt.shouldError {
+				if err == nil {
+					t.Error("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			expectedCmd := "ifconfig " + tt.bridgeName + " addm " + tt.interfaceName
+			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
+			}
+		})
+	}
+}
+
+func TestBareOSManager_RemoveInterfaceFromBridge(t *testing.T) {
+	tests := []struct {
+		name          string
+		bridgeName    string
+		interfaceName string
+		shouldError   bool
+	}{
+		{
+			name:          "successful interface removal",
+			bridgeName:    "br0",
+			interfaceName: "em0",
+			shouldError:   false,
+		},
+		{
+			name:          "empty bridge name",
+			bridgeName:    "",
+			interfaceName: "em0",
+			shouldError:   true,
+		},
+		{
+			name:          "empty interface name",
+			bridgeName:    "br0",
+			interfaceName: "",
+			shouldError:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCmd := NewMockCommandExecutor()
+			manager := NewManager(mockCmd)
+
+			err := manager.RemoveInterfaceFromBridge(tt.bridgeName, tt.interfaceName)
+
+			if tt.shouldError {
+				if err == nil {
+					t.Error("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			expectedCmd := "ifconfig " + tt.bridgeName + " deletem " + tt.interfaceName
+			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
+				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
+			}
+		})
+	}
+}

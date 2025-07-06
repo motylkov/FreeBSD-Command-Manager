@@ -20,6 +20,12 @@ var (
 )
 
 var (
+	bridgeInterfaceName     string
+	bridgeInterfaceToAdd    string
+	bridgeInterfaceToRemove string
+)
+
+var (
 	vlanName, vlanParent string
 	vlanID               int
 	delVlanName          string
@@ -112,6 +118,46 @@ var delBridgeCmd = &cobra.Command{
 		result := map[string]interface{}{
 			"bridge": delBridgeName,
 			"status": "deleted",
+		}
+		if err := internal.Output(result); err != nil {
+			os.Exit(1)
+		}
+	},
+}
+
+var addInterfaceToBridgeCmd = &cobra.Command{
+	Use:   "add-interface-to-bridge",
+	Short: "Add an interface to a bridge",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
+		manager := bareos.DefaultManager()
+		if err := manager.AddInterfaceToBridge(bridgeInterfaceName, bridgeInterfaceToAdd); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		result := map[string]interface{}{
+			"bridge":    bridgeInterfaceName,
+			"interface": bridgeInterfaceToAdd,
+			"status":    "added",
+		}
+		if err := internal.Output(result); err != nil {
+			os.Exit(1)
+		}
+	},
+}
+
+var removeInterfaceFromBridgeCmd = &cobra.Command{
+	Use:   "remove-interface-from-bridge",
+	Short: "Remove an interface from a bridge",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
+		manager := bareos.DefaultManager()
+		if err := manager.RemoveInterfaceFromBridge(bridgeInterfaceName, bridgeInterfaceToRemove); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		result := map[string]interface{}{
+			"bridge":    bridgeInterfaceName,
+			"interface": bridgeInterfaceToRemove,
+			"status":    "removed",
 		}
 		if err := internal.Output(result); err != nil {
 			os.Exit(1)
@@ -311,6 +357,30 @@ func init() { //nolint
 	networkCmd.AddCommand(delBridgeCmd)
 	delBridgeCmd.Flags().StringVar(&delBridgeName, "name", "", "Bridge interface name (required)")
 	if err := delBridgeCmd.MarkFlagRequired("name"); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	networkCmd.AddCommand(addInterfaceToBridgeCmd)
+	addInterfaceToBridgeCmd.Flags().StringVar(&bridgeInterfaceName, "bridge", "", "Bridge name (required)")
+	addInterfaceToBridgeCmd.Flags().StringVar(&bridgeInterfaceToAdd, "interface", "", "Interface to add (required)")
+	if err := addInterfaceToBridgeCmd.MarkFlagRequired("bridge"); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	if err := addInterfaceToBridgeCmd.MarkFlagRequired("interface"); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	networkCmd.AddCommand(removeInterfaceFromBridgeCmd)
+	removeInterfaceFromBridgeCmd.Flags().StringVar(&bridgeInterfaceName, "bridge", "", "Bridge name (required)")
+	removeInterfaceFromBridgeCmd.Flags().StringVar(&bridgeInterfaceToRemove, "interface", "", "Interface to remove (required)")
+	if err := removeInterfaceFromBridgeCmd.MarkFlagRequired("bridge"); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	if err := removeInterfaceFromBridgeCmd.MarkFlagRequired("interface"); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

@@ -22,6 +22,8 @@ type ManagerInterface interface {
 	DeleteInterface(name string) error
 	CreateBridge(name string) error
 	DeleteBridge(name string) error
+	AddInterfaceToBridge(bridgeName, interfaceName string) error
+	RemoveInterfaceFromBridge(bridgeName, interfaceName string) error
 	CreateVLAN(name, parent string, vlanID int) error
 	DeleteVLAN(name string) error
 	CreateGRE(name, remote, local string) error
