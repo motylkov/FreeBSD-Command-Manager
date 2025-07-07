@@ -6,7 +6,7 @@ import (
 )
 
 // VERSION is the current version of the FreeBSD Command Manager.
-var VERSION = "0.01" //nolint: gochecknoglobals
+var VERSION = "0.02" //nolint: gochecknoglobals
 
 var (
 	commit = "0" //nolint: gochecknoglobals,unused

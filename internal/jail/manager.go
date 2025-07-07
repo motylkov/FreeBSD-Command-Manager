@@ -2,6 +2,7 @@
 package jail
 
 import (
+	pkgjail "FreeBSD-Command-manager/pkg/jail"
 	"errors"
 	"fmt"
 	"os"
@@ -21,22 +22,14 @@ type Config struct {
 	Mount string
 }
 
-// Info represents information about a jail
-type Info struct {
-	Name   string
-	Status string
-	IP     string
-	Path   string
-}
-
 // Manager defines the interface for jail operations
 type Manager interface {
 	Create(cfg Config) error
 	Start(name string) error
 	Stop(name string) error
 	Destroy(name string) error
-	List() ([]Info, error)
-	GetInfo(name string) (*Info, error)
+	List() ([]pkgjail.Info, error)
+	GetInfo(name string) (*pkgjail.Info, error)
 }
 
 // FileSystemManager defines the interface for file system operations
@@ -148,36 +141,37 @@ func (j *FreeBSDJailManager) Destroy(name string) error {
 }
 
 // List information about all jails (short)
-func (j *FreeBSDJailManager) List() ([]Info, error) {
-	_, err := j.cmdExec.Execute("jail", "-l")
+func (j *FreeBSDJailManager) List() ([]pkgjail.Info, error) {
+	output, err := j.cmdExec.Execute("jail", "-l")
 	if err != nil {
 		return nil, fmt.Errorf("failed to list jails: %v", err)
 	}
-
-	jails := []Info{}
-	// todo
-	// parse the output "jail -l" and extract jail information
+	jails, err := pkgjail.ParseJailList(output)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse jail list: %v", err)
+	}
 	return jails, nil
 }
 
 // GetInfo returns information about a specific jail.
-func (j *FreeBSDJailManager) GetInfo(name string) (*Info, error) {
+func (j *FreeBSDJailManager) GetInfo(name string) (*pkgjail.Info, error) {
 	if name == "" {
 		return nil, errors.New("jail name is required")
 	}
-
-	_, err := j.cmdExec.Execute("jail", "-l", name)
+	output, err := j.cmdExec.Execute("jail", "-l")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get jail info for %s: %v", name, err)
 	}
-
-	info := &Info{
-		Name: name,
-		// todo
-		// parse the output "jail -l" and extract jail information
+	jails, err := pkgjail.ParseJailList(output)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse jail list: %v", err)
 	}
-
-	return info, nil
+	for _, jail := range jails {
+		if jail.Name == name {
+			return &jail, nil
+		}
+	}
+	return nil, fmt.Errorf("jail %s not found", name)
 }
 
 // RealFileSystemManager implements FileSystemManager using real file system operations
