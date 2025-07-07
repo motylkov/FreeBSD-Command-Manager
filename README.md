@@ -203,8 +203,14 @@ A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 ./fcom network list
 ```
 
+### Version Information
 
-
+```bash
+# Show version, commit, and build date
+./fcom version
+# Example output:
+# 0.02.abcdef.2025-07-06
+```
 
 ## Contributing
 
