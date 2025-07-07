@@ -9,10 +9,11 @@ import (
 var VERSION = "0.02" //nolint: gochecknoglobals
 
 var (
-	commit = "0" //nolint: gochecknoglobals,unused
-	built  = "0" //nolint: gochecknoglobals,unused
+	commit = "0"       //nolint: gochecknoglobals
+	built  = "0"       //nolint: gochecknoglobals
+	date   = "unknown" //nolint: gochecknoglobals
 )
 
 func main() {
-	cmd.Execute()
+	cmd.Execute(VERSION, commit, built, date)
 }

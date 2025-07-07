@@ -23,6 +23,8 @@ __debug*
 config*.yaml
 Makefile
 freebsd-cmd-manager
+main
+fcom
 
 /.vscode
 

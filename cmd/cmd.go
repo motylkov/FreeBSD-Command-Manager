@@ -15,7 +15,11 @@ var cmd = &cobra.Command{
 }
 
 // Execute runs the root command for the FreeBSD Command Manager CLI.
-func Execute() {
+func Execute(v, c, b, d string) {
+	Version = v
+	Commit = c
+	Built = b
+	Date = d
 	if err := cmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
