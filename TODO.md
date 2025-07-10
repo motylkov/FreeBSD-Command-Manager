@@ -20,6 +20,7 @@
     - GRE (done)
     - interface (done)
     - bridge (done)
+    - ip (done)
     - other
 
 - Add linter (done)
