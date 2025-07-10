@@ -719,3 +719,66 @@ func TestBareOSManager_RemoveInterfaceFromBridge(t *testing.T) {
 		})
 	}
 }
+
+func TestAddIP_InvalidInput(t *testing.T) {
+	t.Run("empty iface", func(t *testing.T) {
+		err := AddIP("", "192.168.1.10", 24, "inet")
+		if err == nil {
+			t.Error("expected error for empty iface")
+		}
+	})
+	t.Run("empty ip", func(t *testing.T) {
+		err := AddIP("em0", "", 24, "inet")
+		if err == nil {
+			t.Error("expected error for empty ip")
+		}
+	})
+	t.Run("zero mask", func(t *testing.T) {
+		err := AddIP("em0", "192.168.1.10", 0, "inet")
+		if err == nil {
+			t.Error("expected error for zero mask")
+		}
+	})
+}
+
+func TestAliasIP_InvalidInput(t *testing.T) {
+	t.Run("empty iface", func(t *testing.T) {
+		err := AliasIP("", "192.168.1.20", 24, "inet")
+		if err == nil {
+			t.Error("expected error for empty iface")
+		}
+	})
+	t.Run("empty ip", func(t *testing.T) {
+		err := AliasIP("em0", "", 24, "inet")
+		if err == nil {
+			t.Error("expected error for empty ip")
+		}
+	})
+	t.Run("zero mask", func(t *testing.T) {
+		err := AliasIP("em0", "192.168.1.20", 0, "inet")
+		if err == nil {
+			t.Error("expected error for zero mask")
+		}
+	})
+}
+
+func TestDeleteIP_InvalidInput(t *testing.T) {
+	t.Run("empty iface", func(t *testing.T) {
+		err := DeleteIP("", "192.168.1.10", 24, "inet")
+		if err == nil {
+			t.Error("expected error for empty iface")
+		}
+	})
+	t.Run("empty ip", func(t *testing.T) {
+		err := DeleteIP("em0", "", 24, "inet")
+		if err == nil {
+			t.Error("expected error for empty ip")
+		}
+	})
+	t.Run("zero mask", func(t *testing.T) {
+		err := DeleteIP("em0", "192.168.1.10", 0, "inet")
+		if err == nil {
+			t.Error("expected error for zero mask")
+		}
+	})
+}

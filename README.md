@@ -203,6 +203,22 @@ A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 ./fcom network list
 ```
 
+### IP Address Management
+
+```bash
+# Add IPv4 address to interface
+./fcom ip add --iface em0 --ip 192.168.1.10 --mask 24 --family inet
+
+# Add IPv6 address to interface
+./fcom ip add --iface em0 --ip 2001:db8::1 --mask 64 --family inet6
+
+# Add alias IPv4 address
+./fcom ip alias --iface em0 --ip 192.168.1.20 --mask 24 --family inet
+
+# Delete IPv6 address from interface
+./fcom ip delete --iface em0 --ip 2001:db8::1 --mask 64 --family inet6
+```
+
 ### Version Information
 
 ```bash
