@@ -21,7 +21,7 @@ __debug*
 *.out
 
 config*.yaml
-Makefile
+# Makefile
 freebsd-cmd-manager
 main
 fcom
