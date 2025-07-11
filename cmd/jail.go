@@ -29,18 +29,23 @@ var jailCreateCmd = &cobra.Command{
 			Mount: jailMount,
 		}
 
-		if err := manager.Create(cfg); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+		err := manager.Create(cfg)
+		if err != nil {
+			if e := internal.Output(map[string]interface{}{
+				"error": err.Error(),
+			}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
 		}
-
-		result := map[string]interface{}{
+		if e := internal.Output(map[string]interface{}{
 			"jail_id": jailName,
 			"status":  "created",
 			"ip":      jailIP,
-			"network": "br-jails", // make dynamic ?
-		}
-		if err := internal.Output(result); err != nil {
+			"network": "br-jails", // todo:  make dynamic !
+		}); e != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	},
@@ -53,15 +58,20 @@ var jailStartCmd = &cobra.Command{
 		manager := jail.DefaultManager()
 
 		if err := manager.Start(jailName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if e := internal.Output(map[string]interface{}{
+				"error": err.Error(),
+			}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
 		}
 
-		result := map[string]interface{}{
+		if err := internal.Output(map[string]interface{}{
 			"jail_id": jailName,
 			"status":  "started",
-		}
-		if err := internal.Output(result); err != nil {
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	},
@@ -74,15 +84,20 @@ var jailStopCmd = &cobra.Command{
 		manager := jail.DefaultManager()
 
 		if err := manager.Stop(jailName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if e := internal.Output(map[string]interface{}{
+				"error": err.Error(),
+			}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
 		}
 
-		result := map[string]interface{}{
+		if err := internal.Output(map[string]interface{}{
 			"jail_id": jailName,
 			"status":  "stopped",
-		}
-		if err := internal.Output(result); err != nil {
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	},
@@ -95,15 +110,20 @@ var jailDestroyCmd = &cobra.Command{
 		manager := jail.DefaultManager()
 
 		if err := manager.Destroy(jailName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if e := internal.Output(map[string]interface{}{
+				"error": err.Error(),
+			}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
 		}
 
-		result := map[string]interface{}{
+		if err := internal.Output(map[string]interface{}{
 			"jail_id": jailName,
 			"status":  "destroyed",
-		}
-		if err := internal.Output(result); err != nil {
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	},
@@ -117,15 +137,20 @@ var jailListCmd = &cobra.Command{
 
 		jails, err := manager.List()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if e := internal.Output(map[string]interface{}{
+				"error": err.Error(),
+			}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
 		}
 
-		result := map[string]interface{}{
+		if err := internal.Output(map[string]interface{}{
 			"jails": jails,
 			"count": len(jails),
-		}
-		if err := internal.Output(result); err != nil {
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	},
@@ -139,14 +164,19 @@ var jailInfoCmd = &cobra.Command{
 
 		info, err := manager.GetInfo(jailName)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if e := internal.Output(map[string]interface{}{
+				"error": err.Error(),
+			}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
 		}
 
-		result := map[string]interface{}{
+		if err := internal.Output(map[string]interface{}{
 			"jail_info": info,
-		}
-		if err := internal.Output(result); err != nil {
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	},
