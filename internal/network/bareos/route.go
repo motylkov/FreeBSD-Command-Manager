@@ -6,13 +6,47 @@ import (
 	"strings"
 )
 
+var execCommand = exec.Command
+
+func realListRoutes(family string) (string, error) {
+	if family == "" {
+		family = defaultFamily
+	}
+	cmd := execCommand("netstat", "-rn", "-f", family)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("route list error: %v, output: %s", err, string(output))
+	}
+	return string(output), nil
+}
+
+var listRoutes = realListRoutes
+
 // AddRoute adds a route for the given network and gateway (IPv4 or IPv6).
 func AddRoute(family, network, gw string) error {
 	fam := family
 	if fam == "" {
-		fam = "inet"
+		fam = defaultFamily
 	}
-	cmd := exec.Command("route", "-n", "add", "-"+fam, network, gw)
+	cmd := execCommand("route", "-n", "add", "-"+fam, network, gw)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("route add error: %v, output: %s", err, string(output))
+	}
+	return nil
+}
+
+// AddRouteWithIface adds a route for the given network, gateway, and optional interface (IPv4 or IPv6).
+func AddRouteWithIface(family, network, gw, iface string) error {
+	fam := family
+	if fam == "" {
+		fam = defaultFamily
+	}
+	args := []string{"-n", "add", "-" + fam, network, gw}
+	if iface != "" {
+		args = append(args, "-ifp", iface)
+	}
+	cmd := execCommand("route", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("route add error: %v, output: %s", err, string(output))
@@ -25,7 +59,7 @@ func AddRoute(family, network, gw string) error {
 func DelRoute(family, network string) error {
 	fam := family
 	if fam == "" {
-		fam = "inet"
+		fam = defaultFamily
 	}
 	if network == "default" {
 		count, err := countDefaultRoutes(fam)
@@ -36,7 +70,7 @@ func DelRoute(family, network string) error {
 			return fmt.Errorf("cannot delete the last default route")
 		}
 	}
-	cmd := exec.Command("route", "-n", "delete", "-"+fam, network)
+	cmd := execCommand("route", "-n", "delete", "-"+fam, network)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("route delete error: %v, output: %s", err, string(output))
@@ -44,23 +78,25 @@ func DelRoute(family, network string) error {
 	return nil
 }
 
-// ListRoutes lists all routes for the given family (IPv4 or IPv6).
-func ListRoutes(family string) (string, error) {
-	fam := family
-	if fam == "" {
-		fam = "inet"
+// ListAllRoutes lists both IPv4 and IPv6 routes if family is empty, otherwise lists the specified family.
+func ListAllRoutes(family string) (string, error) {
+	if family != "" {
+		return listRoutes(family)
 	}
-	cmd := exec.Command("netstat", "-rn", "-f", fam)
-	output, err := cmd.CombinedOutput()
+	ipv4, err := listRoutes(defaultFamily)
 	if err != nil {
-		return "", fmt.Errorf("route list error: %v, output: %s", err, string(output))
+		return "", fmt.Errorf("IPv4: %v", err)
 	}
-	return string(output), nil
+	ipv6, err := listRoutes("inet6")
+	if err != nil {
+		return "", fmt.Errorf("IPv6: %v", err)
+	}
+	return fmt.Sprintf("IPv4 routes:\n%s\nIPv6 routes:\n%s", ipv4, ipv6), nil
 }
 
 // countDefaultRoutes returns the number of default routes for the given family.
 func countDefaultRoutes(family string) (int, error) {
-	out, err := ListRoutes(family)
+	out, err := listRoutes(family)
 	if err != nil {
 		return 0, err
 	}

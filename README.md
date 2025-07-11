@@ -226,31 +226,72 @@ A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 
 ### Route Management
 
-Manage IPv4 and IPv6 routes, including default route safety.
+Easily manage IPv4 and IPv6 routes, including adding, deleting, and listing routes. The CLI ensures you cannot accidentally remove the last default route, protecting system connectivity.
+
+#### Add a Route
 
 ```bash
-# Add IPv4 route
+# Add an IPv4 network route
 ./fcom route add --family inet --net 10.0.0.0/24 --gw 10.0.0.1
 
-# Add IPv6 route
+# Add an IPv6 network route
 ./fcom route add --family inet6 --net 2001:db8::/64 --gw 2001:db8::1
 
-# Delete IPv4 route
+# Add an IPv4 network route via a specific interface
+./fcom route add --family inet --net 10.0.0.0/24 --gw 10.0.0.1 --iface em0
+
+# Add an IPv6 network route via a specific interface
+./fcom route add --family inet6 --net 2001:db8::/64 --gw 2001:db8::1 --iface em1
+
+# Add a default IPv4 route
+./fcom route add --family inet --net default --gw 192.168.1.1
+
+# Add a host route (single IP)
+./fcom route add --family inet --net 192.168.1.50/32 --gw 10.0.0.1
+```
+
+> **Note:** The `--iface` flag sets the outgoing interface for the route (uses FreeBSD's `-ifp` option). It is optional.
+
+#### Delete a Route
+
+```bash
+# Delete an IPv4 network route
 ./fcom route del --family inet --net 10.0.0.0/24
 
-# Delete IPv6 route
+# Delete an IPv6 network route
 ./fcom route del --family inet6 --net 2001:db8::/64
 
-# List IPv4 routes
+# Delete a default route (will fail if it's the last default route)
+./fcom route del --family inet --net default
+# Output: cannot delete the last default route
+```
+
+#### List Routes
+
+```bash
+# List all IPv4 routes
 ./fcom route list --family inet
 
 # List IPv6 routes
 ./fcom route list --family inet6
 
+
+# List all routes
+./fcom route list
+```
+
+#### Example: Safe Default Route Handling
+
+```bash
 # Attempting to delete the last default route will fail:
 ./fcom route del --family inet --net default
 # Output: cannot delete the last default route
 ```
+
+#### Troubleshooting
+- Ensure you specify the correct `--family` (either `inet` for IPv4 or `inet6` for IPv6).
+- The `--net` flag accepts both network prefixes (e.g., `10.0.0.0/24`) and `default`.
+- You cannot delete the last default route for a family; this is a safety feature.
 
 ### Version Information
 

@@ -477,5 +477,7 @@ func init() { //nolint
 		os.Exit(1)
 	}
 
+	networkCmd.AddCommand(routeCmd)
+
 	cmd.AddCommand(networkCmd)
 }
