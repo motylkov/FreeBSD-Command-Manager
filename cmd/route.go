@@ -86,7 +86,7 @@ var routeListCmd = &cobra.Command{
 			}
 			return
 		}
-		if err := internal.Output(map[string]interface{}{"routes": out}); err != nil {
+		if err := internal.Output(map[string]interface{}{"routes": out, "count": len(out)}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

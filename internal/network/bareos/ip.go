@@ -5,7 +5,10 @@ import (
 	"os/exec"
 )
 
-const defaultFamily = "inet"
+const (
+	inetFamily  = "inet"
+	inet6Family = "inet6"
+)
 
 // AddIP adds an IP address to an interface (IPv4 or IPv6).
 func AddIP(iface, ip string, mask int, family string) error {
@@ -14,7 +17,7 @@ func AddIP(iface, ip string, mask int, family string) error {
 	}
 	fam := family
 	if fam == "" {
-		fam = defaultFamily
+		fam = inetFamily
 	}
 	addr := fmt.Sprintf("%s/%d", ip, mask)
 	execCmd := exec.Command("ifconfig", iface, fam, addr, "add") //nolint:gosec
@@ -32,7 +35,7 @@ func AliasIP(iface, ip string, mask int, family string) error {
 	}
 	fam := family
 	if fam == "" {
-		fam = defaultFamily
+		fam = inetFamily
 	}
 	addr := fmt.Sprintf("%s/%d", ip, mask)
 	execCmd := exec.Command("ifconfig", iface, fam, addr, "alias") //nolint:gosec
@@ -50,7 +53,7 @@ func DeleteIP(iface, ip string, mask int, family string) error {
 	}
 	fam := family
 	if fam == "" {
-		fam = defaultFamily
+		fam = inetFamily
 	}
 	addr := fmt.Sprintf("%s/%d", ip, mask)
 	execCmd := exec.Command("ifconfig", iface, fam, addr, "delete") //nolint:gosec
