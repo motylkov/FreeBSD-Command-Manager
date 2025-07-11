@@ -2,8 +2,12 @@ package bareos
 
 import (
 	"errors"
+	"os/exec"
+	"strings"
 	"testing"
 )
+
+const inet6Family = "inet6"
 
 func TestBareOSManager_CreateInterface(t *testing.T) {
 	tests := []struct {
@@ -23,14 +27,14 @@ func TestBareOSManager_CreateInterface(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 			manager := NewManager(mockCmd)
 
-			err := manager.CreateInterface(tt.interfaceName)
+			err := manager.CreateInterface(tc.interfaceName)
 
-			if tt.shouldError {
+			if tc.shouldError {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
@@ -44,8 +48,8 @@ func TestBareOSManager_CreateInterface(t *testing.T) {
 			if len(commands) < 2 {
 				t.Errorf("expected at least 2 commands, got %d", len(commands))
 			}
-			expectedCreateCmd := "ifconfig " + tt.interfaceName + " create"
-			expectedUpCmd := "ifconfig " + tt.interfaceName + " up"
+			expectedCreateCmd := "ifconfig " + tc.interfaceName + " create"
+			expectedUpCmd := "ifconfig " + tc.interfaceName + " up"
 			if commands[0] != expectedCreateCmd {
 				t.Errorf("expected first command %s, got %s", expectedCreateCmd, commands[0])
 			}
@@ -74,21 +78,21 @@ func TestBareOSManager_CreateBridge(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 
 			// Set up mock responses for bridge creation
-			if !tt.shouldError {
+			if !tc.shouldError {
 				mockCmd.SetOutput("ifconfig bridge create", "bridge0")
 				mockCmd.SetOutput("ifconfig bridge0 up", "")
 			}
 
 			manager := NewManager(mockCmd)
 
-			err := manager.CreateBridge(tt.bridgeName)
+			err := manager.CreateBridge(tc.bridgeName)
 
-			if tt.shouldError {
+			if tc.shouldError {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
@@ -159,25 +163,25 @@ func TestBareOSManager_CreateVLAN(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 
 			// Set up mock responses for VLAN creation
-			if !tt.shouldError {
+			if !tc.shouldError {
 				mockCmd.SetOutput("ifconfig vlan create", "vlan0")
 				mockCmd.SetOutput("ifconfig vlan0 vlan 100 vlandev em0", "")
 				mockCmd.SetOutput("ifconfig vlan0 up", "")
-				if tt.vlanName != "" {
-					mockCmd.SetOutput("ifconfig vlan0 name "+tt.vlanName, "")
+				if tc.vlanName != "" {
+					mockCmd.SetOutput("ifconfig vlan0 name "+tc.vlanName, "")
 				}
 			}
 
 			manager := NewManager(mockCmd)
 
-			err := manager.CreateVLAN(tt.vlanName, tt.parent, tt.vlanID)
+			err := manager.CreateVLAN(tc.vlanName, tc.parent, tc.vlanID)
 
-			if tt.shouldError {
+			if tc.shouldError {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
@@ -233,25 +237,25 @@ func TestBareOSManager_CreateGRE(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 
 			// Set up mock responses for GRE creation
-			if !tt.shouldError {
+			if !tc.shouldError {
 				mockCmd.SetOutput("ifconfig gre create", "gre0")
 				mockCmd.SetOutput("ifconfig gre0 tunnel 192.168.1.2 192.168.1.1", "")
 				mockCmd.SetOutput("ifconfig gre0 up", "")
-				if tt.greName != "" {
-					mockCmd.SetOutput("ifconfig gre0 name "+tt.greName, "")
+				if tc.greName != "" {
+					mockCmd.SetOutput("ifconfig gre0 name "+tc.greName, "")
 				}
 			}
 
 			manager := NewManager(mockCmd)
 
-			err := manager.CreateGRE(tt.greName, tt.remote, tt.local)
+			err := manager.CreateGRE(tc.greName, tc.remote, tc.local)
 
-			if tt.shouldError {
+			if tc.shouldError {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
@@ -326,11 +330,11 @@ func TestBareOSManager_GetInfo(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 
-			if !tt.shouldError {
+			if !tc.shouldError {
 				// Set up mock ifconfig output for specific interface
 				mockIfconfigOutput := `em0: flags=1008843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST,LOWER_UP> metric 0 mtu 1500
 options=48505bb<RXCSUM,TXCSUM,VLAN_MTU,VLAN_HWTAGGING,JUMBO_MTU,VLAN_HWCSUM,TSO4,LRO,VLAN_HWFILTER,VLAN_HWTSO,HWSTATS,MEXTPG>
@@ -346,9 +350,9 @@ nd6 options=23<PERFORMNUD,ACCEPT_RTADV,AUTO_LINKLOCAL>`
 
 			manager := NewManager(mockCmd)
 
-			info, err := manager.GetInfo(tt.interfaceName)
+			info, err := manager.GetInfo(tc.interfaceName)
 
-			if tt.shouldError {
+			if tc.shouldError {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
@@ -362,10 +366,10 @@ nd6 options=23<PERFORMNUD,ACCEPT_RTADV,AUTO_LINKLOCAL>`
 				t.Error("expected info but got nil")
 				return
 			}
-			if info.Name != tt.interfaceName {
-				t.Errorf("expected name %s, got %s", tt.interfaceName, info.Name)
+			if info.Name != tc.interfaceName {
+				t.Errorf("expected name %s, got %s", tc.interfaceName, info.Name)
 			}
-			expectedCmd := "ifconfig " + tt.interfaceName
+			expectedCmd := "ifconfig " + tc.interfaceName
 			if len(mockCmd.GetCommands()) == 0 || mockCmd.GetCommands()[0] != expectedCmd {
 				t.Errorf("expected command %s, got %v", expectedCmd, mockCmd.GetCommands())
 			}
@@ -527,33 +531,33 @@ func TestBareOSManager_CreateVXLAN(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 
 			// Set up mock responses for VXLAN creation
-			if !tt.shouldError {
+			if !tc.shouldError {
 				mockCmd.SetOutput("ifconfig vxlan create", "vxlan0")
 				// Build expected command based on parameters
 				expectedCmd := "ifconfig vxlan0 vxlan vni 1000 remote 192.168.1.2 local 192.168.1.1"
-				if tt.group != "" {
-					expectedCmd += " group " + tt.group
+				if tc.group != "" {
+					expectedCmd += " group " + tc.group
 				}
-				if tt.dev != "" {
-					expectedCmd += " dev " + tt.dev
+				if tc.dev != "" {
+					expectedCmd += " dev " + tc.dev
 				}
 				mockCmd.SetOutput(expectedCmd, "")
 				mockCmd.SetOutput("ifconfig vxlan0 up", "")
-				if tt.vxlanName != "" {
-					mockCmd.SetOutput("ifconfig vxlan0 name "+tt.vxlanName, "")
+				if tc.vxlanName != "" {
+					mockCmd.SetOutput("ifconfig vxlan0 name "+tc.vxlanName, "")
 				}
 			}
 
 			manager := NewManager(mockCmd)
 
-			err := manager.CreateVXLAN(tt.vxlanName, tt.local, tt.remote, tt.group, tt.dev, tt.vxlanID)
+			err := manager.CreateVXLAN(tc.vxlanName, tc.local, tc.remote, tc.group, tc.dev, tc.vxlanID)
 
-			if tt.shouldError {
+			if tc.shouldError {
 				if err == nil {
 					t.Error("expected error but got none")
 				}
@@ -616,11 +620,11 @@ func TestBareOSManager_DeleteInterface(t *testing.T) {
 		{"successful interface deletion", "test0", false},
 		{"empty interface name", "", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 			manager := NewManager(mockCmd)
-			runDeleteTest(t, mockCmd, manager.DeleteInterface, tt.interfaceName, "ifconfig "+tt.interfaceName+" destroy", tt.shouldError)
+			runDeleteTest(t, mockCmd, manager.DeleteInterface, tc.interfaceName, "ifconfig "+tc.interfaceName+" destroy", tc.shouldError)
 		})
 	}
 }
@@ -634,11 +638,11 @@ func TestBareOSManager_DeleteVLAN(t *testing.T) {
 		{"successful VLAN deletion", "vlan100", false},
 		{"empty VLAN name", "", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 			manager := NewManager(mockCmd)
-			runDeleteTest(t, mockCmd, manager.DeleteVLAN, tt.vlanName, "ifconfig "+tt.vlanName+" destroy", tt.shouldError)
+			runDeleteTest(t, mockCmd, manager.DeleteVLAN, tc.vlanName, "ifconfig "+tc.vlanName+" destroy", tc.shouldError)
 		})
 	}
 }
@@ -652,11 +656,11 @@ func TestBareOSManager_DeleteGRE(t *testing.T) {
 		{"successful GRE deletion", "gre0", false},
 		{"empty GRE name", "", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 			manager := NewManager(mockCmd)
-			runDeleteTest(t, mockCmd, manager.DeleteGRE, tt.greName, "ifconfig "+tt.greName+" destroy", tt.shouldError)
+			runDeleteTest(t, mockCmd, manager.DeleteGRE, tc.greName, "ifconfig "+tc.greName+" destroy", tc.shouldError)
 		})
 	}
 }
@@ -670,11 +674,11 @@ func TestBareOSManager_DeleteVXLAN(t *testing.T) {
 		{"successful VXLAN deletion", "vxlan0", false},
 		{"empty VXLAN name", "", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 			manager := NewManager(mockCmd)
-			runDeleteTest(t, mockCmd, manager.DeleteVXLAN, tt.vxlanName, "ifconfig "+tt.vxlanName+" destroy", tt.shouldError)
+			runDeleteTest(t, mockCmd, manager.DeleteVXLAN, tc.vxlanName, "ifconfig "+tc.vxlanName+" destroy", tc.shouldError)
 		})
 	}
 }
@@ -691,11 +695,11 @@ func TestBareOSManager_AddInterfaceToBridge(t *testing.T) {
 		{"empty bridge name", "", "em0", true},
 		{"empty interface name", "br0", "", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 			manager := NewManager(mockCmd)
-			runBridgeMemberTest(t, mockCmd, manager.AddInterfaceToBridge, tt.bridgeName, tt.interfaceName, "ifconfig "+tt.bridgeName+" addm "+tt.interfaceName, tt.shouldError)
+			runBridgeMemberTest(t, mockCmd, manager.AddInterfaceToBridge, tc.bridgeName, tc.interfaceName, "ifconfig "+tc.bridgeName+" addm "+tc.interfaceName, tc.shouldError)
 		})
 	}
 }
@@ -711,30 +715,30 @@ func TestBareOSManager_RemoveInterfaceFromBridge(t *testing.T) {
 		{"empty bridge name", "", "em0", true},
 		{"empty interface name", "br0", "", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockCmd := NewMockCommandExecutor()
 			manager := NewManager(mockCmd)
-			runBridgeMemberTest(t, mockCmd, manager.RemoveInterfaceFromBridge, tt.bridgeName, tt.interfaceName, "ifconfig "+tt.bridgeName+" deletem "+tt.interfaceName, tt.shouldError)
+			runBridgeMemberTest(t, mockCmd, manager.RemoveInterfaceFromBridge, tc.bridgeName, tc.interfaceName, "ifconfig "+tc.bridgeName+" deletem "+tc.interfaceName, tc.shouldError)
 		})
 	}
 }
 
 func TestAddIP_InvalidInput(t *testing.T) {
 	t.Run("empty iface", func(t *testing.T) {
-		err := AddIP("", "192.168.1.10", 24, "inet")
+		err := AddIP("", "192.168.1.10", 24, defaultFamily)
 		if err == nil {
 			t.Error("expected error for empty iface")
 		}
 	})
 	t.Run("empty ip", func(t *testing.T) {
-		err := AddIP("em0", "", 24, "inet")
+		err := AddIP("em0", "", 24, defaultFamily)
 		if err == nil {
 			t.Error("expected error for empty ip")
 		}
 	})
 	t.Run("zero mask", func(t *testing.T) {
-		err := AddIP("em0", "192.168.1.10", 0, "inet")
+		err := AddIP("em0", "192.168.1.10", 0, defaultFamily)
 		if err == nil {
 			t.Error("expected error for zero mask")
 		}
@@ -743,19 +747,19 @@ func TestAddIP_InvalidInput(t *testing.T) {
 
 func TestAliasIP_InvalidInput(t *testing.T) {
 	t.Run("empty iface", func(t *testing.T) {
-		err := AliasIP("", "192.168.1.20", 24, "inet")
+		err := AliasIP("", "192.168.1.20", 24, defaultFamily)
 		if err == nil {
 			t.Error("expected error for empty iface")
 		}
 	})
 	t.Run("empty ip", func(t *testing.T) {
-		err := AliasIP("em0", "", 24, "inet")
+		err := AliasIP("em0", "", 24, defaultFamily)
 		if err == nil {
 			t.Error("expected error for empty ip")
 		}
 	})
 	t.Run("zero mask", func(t *testing.T) {
-		err := AliasIP("em0", "192.168.1.20", 0, "inet")
+		err := AliasIP("em0", "192.168.1.20", 0, defaultFamily)
 		if err == nil {
 			t.Error("expected error for zero mask")
 		}
@@ -764,21 +768,136 @@ func TestAliasIP_InvalidInput(t *testing.T) {
 
 func TestDeleteIP_InvalidInput(t *testing.T) {
 	t.Run("empty iface", func(t *testing.T) {
-		err := DeleteIP("", "192.168.1.10", 24, "inet")
+		err := DeleteIP("", "192.168.1.10", 24, defaultFamily)
 		if err == nil {
 			t.Error("expected error for empty iface")
 		}
 	})
 	t.Run("empty ip", func(t *testing.T) {
-		err := DeleteIP("em0", "", 24, "inet")
+		err := DeleteIP("em0", "", 24, defaultFamily)
 		if err == nil {
 			t.Error("expected error for empty ip")
 		}
 	})
 	t.Run("zero mask", func(t *testing.T) {
-		err := DeleteIP("em0", "192.168.1.10", 0, "inet")
+		err := DeleteIP("em0", "192.168.1.10", 0, defaultFamily)
 		if err == nil {
 			t.Error("expected error for zero mask")
 		}
 	})
+}
+
+func TestAddRoute(t *testing.T) {
+	oldExecCommand := execCommand
+	defer func() { execCommand = oldExecCommand }()
+
+	var calledArgs []string
+	execCommand = func(name string, args ...string) *exec.Cmd {
+		calledArgs = append([]string{name}, args...)
+		return exec.Command("echo") // always succeeds
+	}
+
+	err := AddRoute(defaultFamily, "10.0.0.0/24", "10.0.0.1")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if len(calledArgs) == 0 || calledArgs[0] != "route" {
+		t.Errorf("expected route command, got %v", calledArgs)
+	}
+}
+
+func TestAddRoute_Error(t *testing.T) {
+	oldExecCommand := execCommand
+	defer func() { execCommand = oldExecCommand }()
+
+	execCommand = func(_ string, _ ...string) *exec.Cmd {
+		return exec.Command("false") // always fails
+	}
+
+	err := AddRoute(defaultFamily, "10.0.0.0/24", "10.0.0.1")
+	if err == nil || !strings.Contains(err.Error(), "route add error") {
+		t.Errorf("expected route add error, got %v", err)
+	}
+}
+
+func TestDelRoute_LastDefault(t *testing.T) {
+	oldListRoutes := listRoutes
+	oldExecCommand := execCommand
+	defer func() { listRoutes = oldListRoutes; execCommand = oldExecCommand }()
+
+	listRoutes = func(family string) (string, error) {
+		if family == defaultFamily {
+			return "default 10.0.0.1\n", nil // only one default
+		}
+		if family == inet6Family {
+			return "default fe80::1\n2001:db8::/64 fe80::1\n", nil
+		}
+		return "", nil
+	}
+
+	err := DelRoute(defaultFamily, "default")
+	if err == nil || !strings.Contains(err.Error(), "cannot delete the last default route") {
+		t.Errorf("expected last default route error, got %v", err)
+	}
+}
+
+func TestDelRoute_Success(t *testing.T) {
+	oldListRoutes := listRoutes
+	oldExecCommand := execCommand
+	defer func() { listRoutes = oldListRoutes; execCommand = oldExecCommand }()
+
+	listRoutes = func(family string) (string, error) {
+		if family == defaultFamily {
+			return "default 10.0.0.1\ndefault 10.0.0.2\n", nil // two defaults
+		}
+		if family == inet6Family {
+			return "default fe80::1\ndefault fe80::2\n", nil // two defaults
+		}
+		return "", nil
+	}
+	execCommand = func(_ string, _ ...string) *exec.Cmd {
+		return exec.Command("echo", "") // always succeeds
+	}
+
+	err := DelRoute(defaultFamily, "default")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+}
+
+func TestListAllRoutes(t *testing.T) {
+	oldListRoutes := listRoutes
+	defer func() { listRoutes = oldListRoutes }()
+
+	listRoutes = func(family string) (string, error) {
+		if family == defaultFamily {
+			return "default 10.0.0.1\n10.0.0.0/24 10.0.0.1\n", nil
+		}
+		if family == inet6Family {
+			return "default fe80::1\n2001:db8::/64 fe80::1\n", nil
+		}
+		return "", nil
+	}
+
+	out, err := ListAllRoutes("")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if !strings.Contains(out, "IPv4 routes:") || !strings.Contains(out, "IPv6 routes:") {
+		t.Errorf("expected both IPv4 and IPv6 routes, got %s", out)
+	}
+}
+
+func TestListAllRoutes_Error(t *testing.T) {
+	oldListRoutes := listRoutes
+	defer func() { listRoutes = oldListRoutes }()
+
+	listRoutes = func(_ string) (string, error) {
+		return "", errors.New("fail")
+	}
+
+	_, err := ListAllRoutes(defaultFamily)
+	if err == nil || !strings.Contains(err.Error(), "fail") {
+		t.Errorf("expected error, got %v", err)
+	}
 }
