@@ -1,6 +1,7 @@
 package bareos
 
 import (
+	"FreeBSD-Command-manager/pkg/netstat"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -9,10 +10,12 @@ import (
 var execCommand = exec.Command
 
 func realListRoutes(family string) (string, error) {
+	var cmd *exec.Cmd
 	if family == "" {
-		family = defaultFamily
+		cmd = execCommand("netstat", "-rn")
+	} else {
+		cmd = execCommand("netstat", "-rn", "-f", family)
 	}
-	cmd := execCommand("netstat", "-rn", "-f", family)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("route list error: %v, output: %s", err, string(output))
@@ -26,7 +29,7 @@ var listRoutes = realListRoutes
 func AddRoute(family, network, gw string) error {
 	fam := family
 	if fam == "" {
-		fam = defaultFamily
+		fam = inetFamily
 	}
 	cmd := execCommand("route", "-n", "add", "-"+fam, network, gw)
 	output, err := cmd.CombinedOutput()
@@ -40,7 +43,7 @@ func AddRoute(family, network, gw string) error {
 func AddRouteWithIface(family, network, gw, iface string) error {
 	fam := family
 	if fam == "" {
-		fam = defaultFamily
+		fam = inetFamily
 	}
 	args := []string{"-n", "add", "-" + fam, network, gw}
 	if iface != "" {
@@ -59,7 +62,7 @@ func AddRouteWithIface(family, network, gw, iface string) error {
 func DelRoute(family, network string) error {
 	fam := family
 	if fam == "" {
-		fam = defaultFamily
+		fam = inetFamily
 	}
 	if network == "default" {
 		count, err := countDefaultRoutes(fam)
@@ -78,20 +81,19 @@ func DelRoute(family, network string) error {
 	return nil
 }
 
-// ListAllRoutes lists both IPv4 and IPv6 routes if family is empty, otherwise lists the specified family.
-func ListAllRoutes(family string) (string, error) {
-	if family != "" {
-		return listRoutes(family)
-	}
-	ipv4, err := listRoutes(defaultFamily)
+// ListAllRoutes lists both IPv4 and IPv6 routes as a JSON string using the netstat parser.
+func ListAllRoutes(family string) ([]netstat.Route, error) {
+	output, err := listRoutes(family)
+
 	if err != nil {
-		return "", fmt.Errorf("IPv4: %v", err)
+		return nil, fmt.Errorf("route list error: %w, output: %s", err, output)
 	}
-	ipv6, err := listRoutes("inet6")
+
+	routes, err := netstat.ParseNetstat(output)
 	if err != nil {
-		return "", fmt.Errorf("IPv6: %v", err)
+		return nil, fmt.Errorf("parse netstat error: %w", err)
 	}
-	return fmt.Sprintf("IPv4 routes:\n%s\nIPv6 routes:\n%s", ipv4, ipv6), nil
+	return routes, nil
 }
 
 // countDefaultRoutes returns the number of default routes for the given family.

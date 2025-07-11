@@ -1,13 +1,14 @@
 package bareos
 
 import (
+	"FreeBSD-Command-manager/pkg/ifconfig"
 	"errors"
 	"os/exec"
 	"strings"
 	"testing"
 )
 
-const inet6Family = "inet6"
+const testDefaultRoute = "default"
 
 func TestBareOSManager_CreateInterface(t *testing.T) {
 	tests := []struct {
@@ -726,19 +727,19 @@ func TestBareOSManager_RemoveInterfaceFromBridge(t *testing.T) {
 
 func TestAddIP_InvalidInput(t *testing.T) {
 	t.Run("empty iface", func(t *testing.T) {
-		err := AddIP("", "192.168.1.10", 24, defaultFamily)
+		err := AddIP("", "192.168.1.10", 24, inetFamily)
 		if err == nil {
 			t.Error("expected error for empty iface")
 		}
 	})
 	t.Run("empty ip", func(t *testing.T) {
-		err := AddIP("em0", "", 24, defaultFamily)
+		err := AddIP("em0", "", 24, inetFamily)
 		if err == nil {
 			t.Error("expected error for empty ip")
 		}
 	})
 	t.Run("zero mask", func(t *testing.T) {
-		err := AddIP("em0", "192.168.1.10", 0, defaultFamily)
+		err := AddIP("em0", "192.168.1.10", 0, inetFamily)
 		if err == nil {
 			t.Error("expected error for zero mask")
 		}
@@ -747,19 +748,19 @@ func TestAddIP_InvalidInput(t *testing.T) {
 
 func TestAliasIP_InvalidInput(t *testing.T) {
 	t.Run("empty iface", func(t *testing.T) {
-		err := AliasIP("", "192.168.1.20", 24, defaultFamily)
+		err := AliasIP("", "192.168.1.20", 24, inetFamily)
 		if err == nil {
 			t.Error("expected error for empty iface")
 		}
 	})
 	t.Run("empty ip", func(t *testing.T) {
-		err := AliasIP("em0", "", 24, defaultFamily)
+		err := AliasIP("em0", "", 24, inetFamily)
 		if err == nil {
 			t.Error("expected error for empty ip")
 		}
 	})
 	t.Run("zero mask", func(t *testing.T) {
-		err := AliasIP("em0", "192.168.1.20", 0, defaultFamily)
+		err := AliasIP("em0", "192.168.1.20", 0, inetFamily)
 		if err == nil {
 			t.Error("expected error for zero mask")
 		}
@@ -768,19 +769,19 @@ func TestAliasIP_InvalidInput(t *testing.T) {
 
 func TestDeleteIP_InvalidInput(t *testing.T) {
 	t.Run("empty iface", func(t *testing.T) {
-		err := DeleteIP("", "192.168.1.10", 24, defaultFamily)
+		err := DeleteIP("", "192.168.1.10", 24, inetFamily)
 		if err == nil {
 			t.Error("expected error for empty iface")
 		}
 	})
 	t.Run("empty ip", func(t *testing.T) {
-		err := DeleteIP("em0", "", 24, defaultFamily)
+		err := DeleteIP("em0", "", 24, inetFamily)
 		if err == nil {
 			t.Error("expected error for empty ip")
 		}
 	})
 	t.Run("zero mask", func(t *testing.T) {
-		err := DeleteIP("em0", "192.168.1.10", 0, defaultFamily)
+		err := DeleteIP("em0", "192.168.1.10", 0, inetFamily)
 		if err == nil {
 			t.Error("expected error for zero mask")
 		}
@@ -797,7 +798,7 @@ func TestAddRoute(t *testing.T) {
 		return exec.Command("echo") // always succeeds
 	}
 
-	err := AddRoute(defaultFamily, "10.0.0.0/24", "10.0.0.1")
+	err := AddRoute(inetFamily, "10.0.0.0/24", "10.0.0.1")
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}
@@ -814,7 +815,7 @@ func TestAddRoute_Error(t *testing.T) {
 		return exec.Command("false") // always fails
 	}
 
-	err := AddRoute(defaultFamily, "10.0.0.0/24", "10.0.0.1")
+	err := AddRoute(inetFamily, "10.0.0.0/24", "10.0.0.1")
 	if err == nil || !strings.Contains(err.Error(), "route add error") {
 		t.Errorf("expected route add error, got %v", err)
 	}
@@ -826,7 +827,7 @@ func TestDelRoute_LastDefault(t *testing.T) {
 	defer func() { listRoutes = oldListRoutes; execCommand = oldExecCommand }()
 
 	listRoutes = func(family string) (string, error) {
-		if family == defaultFamily {
+		if family == inetFamily {
 			return "default 10.0.0.1\n", nil // only one default
 		}
 		if family == inet6Family {
@@ -835,7 +836,7 @@ func TestDelRoute_LastDefault(t *testing.T) {
 		return "", nil
 	}
 
-	err := DelRoute(defaultFamily, "default")
+	err := DelRoute(inetFamily, "default")
 	if err == nil || !strings.Contains(err.Error(), "cannot delete the last default route") {
 		t.Errorf("expected last default route error, got %v", err)
 	}
@@ -847,7 +848,7 @@ func TestDelRoute_Success(t *testing.T) {
 	defer func() { listRoutes = oldListRoutes; execCommand = oldExecCommand }()
 
 	listRoutes = func(family string) (string, error) {
-		if family == defaultFamily {
+		if family == inetFamily {
 			return "default 10.0.0.1\ndefault 10.0.0.2\n", nil // two defaults
 		}
 		if family == inet6Family {
@@ -859,7 +860,7 @@ func TestDelRoute_Success(t *testing.T) {
 		return exec.Command("echo", "") // always succeeds
 	}
 
-	err := DelRoute(defaultFamily, "default")
+	err := DelRoute(inetFamily, "default")
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}
@@ -870,21 +871,30 @@ func TestListAllRoutes(t *testing.T) {
 	defer func() { listRoutes = oldListRoutes }()
 
 	listRoutes = func(family string) (string, error) {
-		if family == defaultFamily {
-			return "default 10.0.0.1\n10.0.0.0/24 10.0.0.1\n", nil
+		if family == inetFamily {
+			return `Destination        Gateway            Flags     Netif
+10.0.0.0/24        10.0.0.1           UGS      em0
+default             10.0.0.1           UGS      em0
+`, nil
 		}
 		if family == inet6Family {
-			return "default fe80::1\n2001:db8::/64 fe80::1\n", nil
+			return `Destination        Gateway            Flags     Netif
+2001:db8::/64      fe80::1            UGS      em1
+default            fe80::1            UGS      em1
+`, nil
 		}
 		return "", nil
 	}
 
-	out, err := ListAllRoutes("")
+	routes, err := ListAllRoutes(inetFamily)
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}
-	if !strings.Contains(out, "IPv4 routes:") || !strings.Contains(out, "IPv6 routes:") {
-		t.Errorf("expected both IPv4 and IPv6 routes, got %s", out)
+	if len(routes) != 2 {
+		t.Errorf("expected 2 routes, got %d", len(routes))
+	}
+	if routes[0].Destination != "10.0.0.0/24" || routes[1].Destination != testDefaultRoute {
+		t.Errorf("unexpected route destinations: %+v", routes)
 	}
 }
 
@@ -896,8 +906,74 @@ func TestListAllRoutes_Error(t *testing.T) {
 		return "", errors.New("fail")
 	}
 
-	_, err := ListAllRoutes(defaultFamily)
+	_, err := ListAllRoutes(inetFamily)
 	if err == nil || !strings.Contains(err.Error(), "fail") {
 		t.Errorf("expected error, got %v", err)
 	}
+}
+
+func TestManager_List_IPs(t *testing.T) {
+	mockCmd := NewMockCommandExecutor()
+	mockCmd.SetOutput("ifconfig", `em0: flags=1008843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST,LOWER_UP> metric 0 mtu 1500
+    inet 192.168.1.10 netmask 0xffffff00
+    inet6 fe80::1 prefixlen 64
+lo0: flags=1008049<UP,LOOPBACK,RUNNING,MULTICAST,LOWER_UP> metric 0 mtu 16384
+    inet 127.0.0.1 netmask 0xff000000
+    inet6 ::1 prefixlen 128
+`)
+	manager := NewManager(mockCmd)
+	infos, err := manager.List()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Check em0
+	em0 := findInfo(infos, "em0")
+	if em0 == nil {
+		t.Fatal("em0 not found")
+	}
+	if len(em0.IPv4) != 1 || em0.IPv4[0] != "192.168.1.10/24" {
+		t.Errorf("em0 IPv4 mismatch: %v", em0.IPv4)
+	}
+	if len(em0.IPv6) != 1 || em0.IPv6[0] != "fe80::1/64" {
+		t.Errorf("em0 IPv6 mismatch: %v", em0.IPv6)
+	}
+	// Check lo0
+	lo0 := findInfo(infos, "lo0")
+	if lo0 == nil {
+		t.Fatal("lo0 not found")
+	}
+	if len(lo0.IPv4) != 1 || lo0.IPv4[0] != "127.0.0.1/8" {
+		t.Errorf("lo0 IPv4 mismatch: %v", lo0.IPv4)
+	}
+	if len(lo0.IPv6) != 1 || lo0.IPv6[0] != "::1/128" {
+		t.Errorf("lo0 IPv6 mismatch: %v", lo0.IPv6)
+	}
+}
+
+func TestManager_GetInfo_IPs(t *testing.T) {
+	mockCmd := NewMockCommandExecutor()
+	mockCmd.SetOutput("ifconfig em0", `em0: flags=1008843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST,LOWER_UP> metric 0 mtu 1500
+    inet 192.168.1.10 netmask 0xffffff00
+    inet6 fe80::1 prefixlen 64
+`)
+	manager := NewManager(mockCmd)
+	info, err := manager.GetInfo("em0")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(info.IPv4) != 1 || info.IPv4[0] != "192.168.1.10/24" {
+		t.Errorf("em0 IPv4 mismatch: %v", info.IPv4)
+	}
+	if len(info.IPv6) != 1 || info.IPv6[0] != "fe80::1/64" {
+		t.Errorf("em0 IPv6 mismatch: %v", info.IPv6)
+	}
+}
+
+func findInfo(infos []ifconfig.Info, name string) *ifconfig.Info {
+	for i := range infos {
+		if infos[i].Name == name {
+			return &infos[i]
+		}
+	}
+	return nil
 }

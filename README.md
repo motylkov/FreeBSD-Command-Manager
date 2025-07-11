@@ -232,59 +232,55 @@ Easily manage IPv4 and IPv6 routes, including adding, deleting, and listing rout
 
 ```bash
 # Add an IPv4 network route
-./fcom route add --family inet --net 10.0.0.0/24 --gw 10.0.0.1
+./fcom network route add --family inet --net 10.0.0.0/24 --gw 10.0.0.1
 
 # Add an IPv6 network route
-./fcom route add --family inet6 --net 2001:db8::/64 --gw 2001:db8::1
+./fcom network route add --family inet6 --net 2001:db8::/64 --gw 2001:db8::1
 
 # Add an IPv4 network route via a specific interface
-./fcom route add --family inet --net 10.0.0.0/24 --gw 10.0.0.1 --iface em0
+./fcom network route add --family inet --net 10.0.0.0/24 --gw 10.0.0.1 --iface em0
 
 # Add an IPv6 network route via a specific interface
-./fcom route add --family inet6 --net 2001:db8::/64 --gw 2001:db8::1 --iface em1
+./fcom network route add --family inet6 --net 2001:db8::/64 --gw 2001:db8::1 --iface em1
 
 # Add a default IPv4 route
-./fcom route add --family inet --net default --gw 192.168.1.1
+./fcom network route add --family inet --net default --gw 192.168.1.1
 
 # Add a host route (single IP)
-./fcom route add --family inet --net 192.168.1.50/32 --gw 10.0.0.1
+./fcom network route add --family inet --net 192.168.1.50/32 --gw 10.0.0.1
 ```
-
-> **Note:** The `--iface` flag sets the outgoing interface for the route (uses FreeBSD's `-ifp` option). It is optional.
 
 #### Delete a Route
 
 ```bash
 # Delete an IPv4 network route
-./fcom route del --family inet --net 10.0.0.0/24
+./fcom network route del --family inet --net 10.0.0.0/24
 
 # Delete an IPv6 network route
-./fcom route del --family inet6 --net 2001:db8::/64
+./fcom network route del --family inet6 --net 2001:db8::/64
 
-# Delete a default route (will fail if it's the last default route)
-./fcom route del --family inet --net default
-# Output: cannot delete the last default route
+# Delete a default route (if more than one exists)
+./fcom network route del --family inet --net default
 ```
 
 #### List Routes
 
 ```bash
 # List all IPv4 routes
-./fcom route list --family inet
+./fcom network route list --family inet
 
-# List IPv6 routes
-./fcom route list --family inet6
+# List all IPv6 routes
+./fcom network route list --family inet6
 
-
-# List all routes
-./fcom route list
+# List all routes (both families)
+./fcom network route list
 ```
 
 #### Example: Safe Default Route Handling
 
 ```bash
 # Attempting to delete the last default route will fail:
-./fcom route del --family inet --net default
+./fcom network route del --family inet --net default
 # Output: cannot delete the last default route
 ```
 

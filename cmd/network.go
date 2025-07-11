@@ -9,6 +9,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// IPs holds lists of IPv4 and IPv6 addresses for output.
+type IPs struct {
+	IPv4 []string
+	IPv6 []string
+}
+
 var (
 	ifName       string
 	delIfaceName string
@@ -42,6 +48,13 @@ var (
 	delVxlanName                                             string
 )
 
+var (
+	ipIface  string
+	ipAddr   string
+	ipMask   int
+	ipFamily string
+)
+
 var networkCmd = &cobra.Command{
 	Use:   "network",
 	Short: "Manage networks",
@@ -54,14 +67,14 @@ var ifaceCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.CreateInterface(ifName); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"interface": ifName, "status": "created"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"interface": ifName,
-			"status":    "created",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -73,14 +86,14 @@ var delIfaceCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.DeleteInterface(delIfaceName); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"interface": delIfaceName, "status": "deleted"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"interface": delIfaceName,
-			"status":    "deleted",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -93,14 +106,14 @@ var bridgeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.CreateBridge(bridgeName); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"bridge": bridgeName, "status": "created"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"bridge": bridgeName,
-			"status": "created",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -112,14 +125,14 @@ var delBridgeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.DeleteBridge(delBridgeName); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"bridge": delBridgeName, "status": "deleted"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"bridge": delBridgeName,
-			"status": "deleted",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -131,15 +144,14 @@ var addInterfaceToBridgeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.AddInterfaceToBridge(bridgeInterfaceName, bridgeInterfaceToAdd); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"bridge": bridgeInterfaceName, "interface": bridgeInterfaceToAdd, "status": "added"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"bridge":    bridgeInterfaceName,
-			"interface": bridgeInterfaceToAdd,
-			"status":    "added",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -151,15 +163,14 @@ var removeInterfaceFromBridgeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.RemoveInterfaceFromBridge(bridgeInterfaceName, bridgeInterfaceToRemove); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"bridge": bridgeInterfaceName, "interface": bridgeInterfaceToRemove, "status": "removed"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"bridge":    bridgeInterfaceName,
-			"interface": bridgeInterfaceToRemove,
-			"status":    "removed",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -172,16 +183,14 @@ var vlanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.CreateVLAN(vlanName, vlanParent, vlanID); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"vlan": vlanName, "parent": vlanParent, "vlan_id": vlanID, "status": "created"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"vlan":    vlanName,
-			"parent":  vlanParent,
-			"vlan_id": vlanID,
-			"status":  "created",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -193,14 +202,14 @@ var delVlanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.DeleteVLAN(delVlanName); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"vlan": delVlanName, "status": "deleted"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"vlan":   delVlanName,
-			"status": "deleted",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -213,16 +222,14 @@ var greCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.CreateGRE(greName, greRemote, greLocal); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"gre": greName, "remote": greRemote, "local": greLocal, "status": "created"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"gre":    greName,
-			"remote": greRemote,
-			"local":  greLocal,
-			"status": "created",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -234,14 +241,14 @@ var delGreCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.DeleteGRE(delGreName); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"gre": delGreName, "status": "deleted"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"gre":    delGreName,
-			"status": "deleted",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -254,19 +261,14 @@ var vxlanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.CreateVXLAN(vxlanName, vxlanLocal, vxlanRemote, vxlanGroup, vxlanDev, vxlanID); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"vxlan": vxlanName, "local": vxlanLocal, "remote": vxlanRemote, "group": vxlanGroup, "dev": vxlanDev, "vni": vxlanID, "status": "created"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"vxlan":  vxlanName,
-			"local":  vxlanLocal,
-			"remote": vxlanRemote,
-			"group":  vxlanGroup,
-			"dev":    vxlanDev,
-			"vni":    vxlanID,
-			"status": "created",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -278,14 +280,14 @@ var delVxlanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		manager := bareos.DefaultManager()
 		if err := manager.DeleteVXLAN(delVxlanName); err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"vxlan": delVxlanName, "status": "deleted"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"vxlan":  delVxlanName,
-			"status": "deleted",
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -298,14 +300,14 @@ var networkListCmd = &cobra.Command{
 		manager := bareos.DefaultManager()
 		interfaces, err := manager.List()
 		if err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"interfaces": interfaces, "count": len(interfaces)}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		result := map[string]interface{}{
-			"interfaces": interfaces,
-			"count":      len(interfaces),
-		}
-		if err := internal.Output(result); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -318,13 +320,135 @@ var networkInfoCmd = &cobra.Command{
 		manager := bareos.DefaultManager()
 		info, err := manager.GetInfo(ifName)
 		if err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"interface_info": info}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		result := map[string]interface{}{
-			"interface_info": info,
+	},
+}
+
+var ipCmd = &cobra.Command{
+	Use:   "ip",
+	Short: "Manage IP addresses on interfaces",
+}
+
+var ipAddCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add an IP address to an interface",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		err := bareos.AddIP(ipIface, ipAddr, ipMask, ipFamily)
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
 		}
-		if err := internal.Output(result); err != nil {
+		if err := internal.Output(map[string]any{
+			"interface": ipIface,
+			"ip":        ipAddr,
+			"mask":      ipMask,
+			"family":    ipFamily,
+			"status":    "added",
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
+}
+
+var ipAliasCmd = &cobra.Command{
+	Use:   "alias",
+	Short: "Add an alias IP address to an interface",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		err := bareos.AliasIP(ipIface, ipAddr, ipMask, ipFamily)
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]any{
+			"interface": ipIface,
+			"ip":        ipAddr,
+			"mask":      ipMask,
+			"family":    ipFamily,
+			"status":    "aliased",
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
+}
+
+var ipDeleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete an IP address from an interface",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		err := bareos.DeleteIP(ipIface, ipAddr, ipMask, ipFamily)
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]any{
+			"interface": ipIface,
+			"ip":        ipAddr,
+			"mask":      ipMask,
+			"family":    ipFamily,
+			"status":    "deleted",
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
+}
+
+var ipListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List IP addresses on interfaces",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		// use ifconfig parser to list all IPs
+		manager := bareos.DefaultManager()
+		if ipIface != "" {
+			info, err := manager.GetInfo(ipIface)
+			if err != nil {
+				if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+					fmt.Fprintln(os.Stderr, err)
+					os.Exit(1)
+				}
+				return
+			}
+			if err := internal.Output(map[string]any{"interface": ipIface, "ipv6": info.IPv6, "ipv4": info.IPv4, "count": len(info.IPv4) + len(info.IPv4)}); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		var allIPs IPs
+		info, err := manager.List()
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		for _, ip := range info {
+			allIPs.IPv6 = append(allIPs.IPv6, ip.IPv6...) // assuming Info has IPv6 []string
+			allIPs.IPv4 = append(allIPs.IPv4, ip.IPv4...) // assuming Info has IPv4 []string
+		}
+		if err := internal.Output(map[string]any{"ipv6": allIPs.IPv6, "ipv4": allIPs.IPv4, "count": len(allIPs.IPv4) + len(allIPs.IPv6)}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	},
@@ -466,6 +590,40 @@ func init() { //nolint
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+
+	// IP commands
+	ipAddCmd.Flags().StringVar(&ipIface, "iface", "", "Interface name (required)")
+	ipAddCmd.Flags().StringVar(&ipAddr, "ip", "", "IP address (required)")
+	ipAddCmd.Flags().IntVar(&ipMask, "mask", 0, "Netmask/CIDR (required)")
+	ipAddCmd.Flags().StringVar(&ipFamily, "family", "inet", "Address family (inet or inet6)")
+	_ = ipAddCmd.MarkFlagRequired("iface")
+	_ = ipAddCmd.MarkFlagRequired("ip")
+	_ = ipAddCmd.MarkFlagRequired("mask")
+
+	ipAliasCmd.Flags().StringVar(&ipIface, "iface", "", "Interface name (required)")
+	ipAliasCmd.Flags().StringVar(&ipAddr, "ip", "", "IP address (required)")
+	ipAliasCmd.Flags().IntVar(&ipMask, "mask", 0, "Netmask/CIDR (required)")
+	ipAliasCmd.Flags().StringVar(&ipFamily, "family", "inet", "Address family (inet or inet6)")
+	_ = ipAliasCmd.MarkFlagRequired("iface")
+	_ = ipAliasCmd.MarkFlagRequired("ip")
+	_ = ipAliasCmd.MarkFlagRequired("mask")
+
+	ipDeleteCmd.Flags().StringVar(&ipIface, "iface", "", "Interface name (required)")
+	ipDeleteCmd.Flags().StringVar(&ipAddr, "ip", "", "IP address (required)")
+	ipDeleteCmd.Flags().IntVar(&ipMask, "mask", 0, "Netmask/CIDR (required)")
+	ipDeleteCmd.Flags().StringVar(&ipFamily, "family", "inet", "Address family (inet or inet6)")
+	_ = ipDeleteCmd.MarkFlagRequired("iface")
+	_ = ipDeleteCmd.MarkFlagRequired("ip")
+	_ = ipDeleteCmd.MarkFlagRequired("mask")
+
+	ipCmd.AddCommand(ipAddCmd)
+	ipCmd.AddCommand(ipAliasCmd)
+	ipCmd.AddCommand(ipDeleteCmd)
+	ipCmd.AddCommand(ipListCmd)
+	networkCmd.AddCommand(ipCmd)
+
+	// Add ip commant to top level, do not delete.
+	// cmd.AddCommand(ipCmd)
 
 	// List and Info commands
 	networkCmd.AddCommand(networkListCmd)

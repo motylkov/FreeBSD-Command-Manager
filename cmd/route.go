@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"FreeBSD-Command-manager/internal"
+
 	"github.com/spf13/cobra"
 )
 
@@ -23,17 +25,26 @@ var routeCmd = &cobra.Command{
 var routeAddCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a route",
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		if routeNet == "" || routeGW == "" {
-			fmt.Fprintln(os.Stderr, "--net and --gw are required")
-			os.Exit(1)
+			if e := internal.Output(map[string]interface{}{"error": "--net and --gw are required"}); e != nil {
+				fmt.Fprintln(os.Stderr, e)
+				os.Exit(1)
+			}
+			return
 		}
 		err := bareos.AddRouteWithIface(routeFamily, routeNet, routeGW, routeIface)
 		if err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, e)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"status": "Route added successfully"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		fmt.Println("Route added successfully")
 	},
 }
 
@@ -42,15 +53,24 @@ var routeDelCmd = &cobra.Command{
 	Short: "Delete a route",
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		if routeNet == "" {
-			fmt.Fprintln(os.Stderr, "--net is required")
-			os.Exit(1)
+			if e := internal.Output(map[string]interface{}{"error": "--net is required"}); e != nil {
+				fmt.Fprintln(os.Stderr, e)
+				os.Exit(1)
+			}
+			return
 		}
 		err := bareos.DelRoute(routeFamily, routeNet)
 		if err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, e)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"status": "Route deleted successfully"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		fmt.Println("Route deleted successfully")
 	},
 }
 
@@ -60,10 +80,16 @@ var routeListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
 		out, err := bareos.ListAllRoutes(routeFamily)
 		if err != nil {
+			if e := internal.Output(map[string]interface{}{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, e)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]interface{}{"routes": out, "count": len(out)}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		fmt.Print(out)
 	},
 }
 
@@ -82,5 +108,6 @@ func init() { //nolint
 	routeCmd.AddCommand(routeDelCmd)
 	routeCmd.AddCommand(routeListCmd)
 
-	cmd.AddCommand(routeCmd)
+	// Add route to top level, do not delete.
+	// cmd.AddCommand(routeCmd)
 }
