@@ -1,6 +1,7 @@
 package bareos
 
 import (
+	"FreeBSD-Command-manager/pkg/ifconfig"
 	"errors"
 	"os/exec"
 	"strings"
@@ -909,4 +910,70 @@ func TestListAllRoutes_Error(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "fail") {
 		t.Errorf("expected error, got %v", err)
 	}
+}
+
+func TestManager_List_IPs(t *testing.T) {
+	mockCmd := NewMockCommandExecutor()
+	mockCmd.SetOutput("ifconfig", `em0: flags=1008843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST,LOWER_UP> metric 0 mtu 1500
+    inet 192.168.1.10 netmask 0xffffff00
+    inet6 fe80::1 prefixlen 64
+lo0: flags=1008049<UP,LOOPBACK,RUNNING,MULTICAST,LOWER_UP> metric 0 mtu 16384
+    inet 127.0.0.1 netmask 0xff000000
+    inet6 ::1 prefixlen 128
+`)
+	manager := NewManager(mockCmd)
+	infos, err := manager.List()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Check em0
+	em0 := findInfo(infos, "em0")
+	if em0 == nil {
+		t.Fatal("em0 not found")
+	}
+	if len(em0.IPv4) != 1 || em0.IPv4[0] != "192.168.1.10/24" {
+		t.Errorf("em0 IPv4 mismatch: %v", em0.IPv4)
+	}
+	if len(em0.IPv6) != 1 || em0.IPv6[0] != "fe80::1/64" {
+		t.Errorf("em0 IPv6 mismatch: %v", em0.IPv6)
+	}
+	// Check lo0
+	lo0 := findInfo(infos, "lo0")
+	if lo0 == nil {
+		t.Fatal("lo0 not found")
+	}
+	if len(lo0.IPv4) != 1 || lo0.IPv4[0] != "127.0.0.1/8" {
+		t.Errorf("lo0 IPv4 mismatch: %v", lo0.IPv4)
+	}
+	if len(lo0.IPv6) != 1 || lo0.IPv6[0] != "::1/128" {
+		t.Errorf("lo0 IPv6 mismatch: %v", lo0.IPv6)
+	}
+}
+
+func TestManager_GetInfo_IPs(t *testing.T) {
+	mockCmd := NewMockCommandExecutor()
+	mockCmd.SetOutput("ifconfig em0", `em0: flags=1008843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST,LOWER_UP> metric 0 mtu 1500
+    inet 192.168.1.10 netmask 0xffffff00
+    inet6 fe80::1 prefixlen 64
+`)
+	manager := NewManager(mockCmd)
+	info, err := manager.GetInfo("em0")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(info.IPv4) != 1 || info.IPv4[0] != "192.168.1.10/24" {
+		t.Errorf("em0 IPv4 mismatch: %v", info.IPv4)
+	}
+	if len(info.IPv6) != 1 || info.IPv6[0] != "fe80::1/64" {
+		t.Errorf("em0 IPv6 mismatch: %v", info.IPv6)
+	}
+}
+
+func findInfo(infos []ifconfig.Info, name string) *ifconfig.Info {
+	for i := range infos {
+		if infos[i].Name == name {
+			return &infos[i]
+		}
+	}
+	return nil
 }

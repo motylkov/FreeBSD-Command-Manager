@@ -9,6 +9,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// IPs holds lists of IPv4 and IPv6 addresses for output.
+type IPs struct {
+	IPv4 []string
+	IPv6 []string
+}
+
 var (
 	ifName       string
 	delIfaceName string
@@ -407,6 +413,47 @@ var ipDeleteCmd = &cobra.Command{
 	},
 }
 
+var ipListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List IP addresses on interfaces",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		// use ifconfig parser to list all IPs
+		manager := bareos.DefaultManager()
+		if ipIface != "" {
+			info, err := manager.GetInfo(ipIface)
+			if err != nil {
+				if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+					fmt.Fprintln(os.Stderr, err)
+					os.Exit(1)
+				}
+				return
+			}
+			if err := internal.Output(map[string]any{"interface": ipIface, "ipv6": info.IPv6, "ipv4": info.IPv4, "count": len(info.IPv4) + len(info.IPv4)}); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		var allIPs IPs
+		info, err := manager.List()
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		for _, ip := range info {
+			allIPs.IPv6 = append(allIPs.IPv6, ip.IPv6...) // assuming Info has IPv6 []string
+			allIPs.IPv4 = append(allIPs.IPv4, ip.IPv4...) // assuming Info has IPv4 []string
+		}
+		if err := internal.Output(map[string]any{"ipv6": allIPs.IPv6, "ipv4": allIPs.IPv4, "count": len(allIPs.IPv4) + len(allIPs.IPv6)}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
+}
+
 func init() { //nolint
 	// iface
 	networkCmd.AddCommand(ifaceCmd)
@@ -572,6 +619,7 @@ func init() { //nolint
 	ipCmd.AddCommand(ipAddCmd)
 	ipCmd.AddCommand(ipAliasCmd)
 	ipCmd.AddCommand(ipDeleteCmd)
+	ipCmd.AddCommand(ipListCmd)
 	networkCmd.AddCommand(ipCmd)
 
 	// Add ip commant to top level, do not delete.
