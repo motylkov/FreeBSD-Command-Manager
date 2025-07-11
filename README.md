@@ -11,6 +11,7 @@ A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
   - OS level
     - [Interfaces Management](#network-management)
     - [IP Address Management](#ip-address-management) 
+    - [Route Management](#route-management)
 
 
 ## Examples
@@ -221,6 +222,34 @@ A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 
 # Delete IPv6 address from interface
 ./fcom ip delete --iface em0 --ip 2001:db8::1 --mask 64 --family inet6
+```
+
+### Route Management
+
+Manage IPv4 and IPv6 routes, including default route safety.
+
+```bash
+# Add IPv4 route
+./fcom route add --family inet --net 10.0.0.0/24 --gw 10.0.0.1
+
+# Add IPv6 route
+./fcom route add --family inet6 --net 2001:db8::/64 --gw 2001:db8::1
+
+# Delete IPv4 route
+./fcom route del --family inet --net 10.0.0.0/24
+
+# Delete IPv6 route
+./fcom route del --family inet6 --net 2001:db8::/64
+
+# List IPv4 routes
+./fcom route list --family inet
+
+# List IPv6 routes
+./fcom route list --family inet6
+
+# Attempting to delete the last default route will fail:
+./fcom route del --family inet --net default
+# Output: cannot delete the last default route
 ```
 
 ### Version Information
