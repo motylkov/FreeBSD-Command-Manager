@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"FreeBSD-Command-manager/internal"
+
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -18,7 +21,16 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version information",
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive // cmd is required by cobra interface
-		fmt.Printf("%s.%s.%s.%s\n", Version, Commit, Built, Date)
+		err := internal.Output(map[string]interface{}{
+			"version": Version,
+			"commit":  Commit,
+			"built":   Built,
+			"date":    Date,
+		})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	},
 }
 
