@@ -6,8 +6,12 @@ A comprehensive Go CLI tool for managing FreeBSD infrastructure resources.
 
 ## Features
 
-- **Jail Management**
-- **Network Management**
+- [Jail Management](#jail-management)
+- Network Management
+  - OS level
+    - [Interfaces Management](#network-management)
+    - [IP Address Management](#ip-address-management) 
+
 
 ## Examples
 
