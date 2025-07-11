@@ -42,6 +42,13 @@ var (
 	delVxlanName                                             string
 )
 
+var (
+	ipIface  string
+	ipAddr   string
+	ipMask   int
+	ipFamily string
+)
+
 var networkCmd = &cobra.Command{
 	Use:   "network",
 	Short: "Manage networks",
@@ -320,6 +327,86 @@ var networkInfoCmd = &cobra.Command{
 	},
 }
 
+var ipCmd = &cobra.Command{
+	Use:   "ip",
+	Short: "Manage IP addresses on interfaces",
+}
+
+var ipAddCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add an IP address to an interface",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		err := bareos.AddIP(ipIface, ipAddr, ipMask, ipFamily)
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]any{
+			"interface": ipIface,
+			"ip":        ipAddr,
+			"mask":      ipMask,
+			"family":    ipFamily,
+			"status":    "added",
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
+}
+
+var ipAliasCmd = &cobra.Command{
+	Use:   "alias",
+	Short: "Add an alias IP address to an interface",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		err := bareos.AliasIP(ipIface, ipAddr, ipMask, ipFamily)
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]any{
+			"interface": ipIface,
+			"ip":        ipAddr,
+			"mask":      ipMask,
+			"family":    ipFamily,
+			"status":    "aliased",
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
+}
+
+var ipDeleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete an IP address from an interface",
+	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
+		err := bareos.DeleteIP(ipIface, ipAddr, ipMask, ipFamily)
+		if err != nil {
+			if e := internal.Output(map[string]any{"error": err.Error()}); e != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		if err := internal.Output(map[string]any{
+			"interface": ipIface,
+			"ip":        ipAddr,
+			"mask":      ipMask,
+			"family":    ipFamily,
+			"status":    "deleted",
+		}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
+}
+
 func init() { //nolint
 	// iface
 	networkCmd.AddCommand(ifaceCmd)
@@ -456,6 +543,39 @@ func init() { //nolint
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+
+	// IP commands
+	ipAddCmd.Flags().StringVar(&ipIface, "iface", "", "Interface name (required)")
+	ipAddCmd.Flags().StringVar(&ipAddr, "ip", "", "IP address (required)")
+	ipAddCmd.Flags().IntVar(&ipMask, "mask", 0, "Netmask/CIDR (required)")
+	ipAddCmd.Flags().StringVar(&ipFamily, "family", "inet", "Address family (inet or inet6)")
+	_ = ipAddCmd.MarkFlagRequired("iface")
+	_ = ipAddCmd.MarkFlagRequired("ip")
+	_ = ipAddCmd.MarkFlagRequired("mask")
+
+	ipAliasCmd.Flags().StringVar(&ipIface, "iface", "", "Interface name (required)")
+	ipAliasCmd.Flags().StringVar(&ipAddr, "ip", "", "IP address (required)")
+	ipAliasCmd.Flags().IntVar(&ipMask, "mask", 0, "Netmask/CIDR (required)")
+	ipAliasCmd.Flags().StringVar(&ipFamily, "family", "inet", "Address family (inet or inet6)")
+	_ = ipAliasCmd.MarkFlagRequired("iface")
+	_ = ipAliasCmd.MarkFlagRequired("ip")
+	_ = ipAliasCmd.MarkFlagRequired("mask")
+
+	ipDeleteCmd.Flags().StringVar(&ipIface, "iface", "", "Interface name (required)")
+	ipDeleteCmd.Flags().StringVar(&ipAddr, "ip", "", "IP address (required)")
+	ipDeleteCmd.Flags().IntVar(&ipMask, "mask", 0, "Netmask/CIDR (required)")
+	ipDeleteCmd.Flags().StringVar(&ipFamily, "family", "inet", "Address family (inet or inet6)")
+	_ = ipDeleteCmd.MarkFlagRequired("iface")
+	_ = ipDeleteCmd.MarkFlagRequired("ip")
+	_ = ipDeleteCmd.MarkFlagRequired("mask")
+
+	ipCmd.AddCommand(ipAddCmd)
+	ipCmd.AddCommand(ipAliasCmd)
+	ipCmd.AddCommand(ipDeleteCmd)
+	networkCmd.AddCommand(ipCmd)
+
+	// Add ip commant to top level, do not delete.
+	// cmd.AddCommand(ipCmd)
 
 	// List and Info commands
 	networkCmd.AddCommand(networkListCmd)

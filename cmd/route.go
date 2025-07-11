@@ -108,5 +108,6 @@ func init() { //nolint
 	routeCmd.AddCommand(routeDelCmd)
 	routeCmd.AddCommand(routeListCmd)
 
-	cmd.AddCommand(routeCmd)
+	// Add route to top level, do not delete.
+	// cmd.AddCommand(routeCmd)
 }
